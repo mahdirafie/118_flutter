@@ -30,3 +30,17 @@ final class AddToFavorites extends FavoriteEvent {
   final List<int> favcatIds;
   const AddToFavorites(this.cid, this.favcatIds);
 }
+
+final class DeleteFromFavorites extends FavoriteEvent {
+  final int cid;
+  final int uid;
+
+  const DeleteFromFavorites({required this.cid, required this.uid});
+}
+
+final class GetFavoriteCategoryFavorites extends FavoriteEvent {
+  final int favcatId;
+  final int userId;
+
+  const GetFavoriteCategoryFavorites({required this.favcatId, required this.userId});
+}

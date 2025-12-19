@@ -1,5 +1,6 @@
 import 'package:basu_118/features/favorites/domain/favorite_repository.dart';
 import 'package:basu_118/features/favorites/dto/favorite_category_dto.dart';
+import 'package:basu_118/features/favorites/dto/favorite_category_favorites_dto.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -94,7 +95,9 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     on<AddToFavorites>((event, emit) async {
       try {
         emit(AddToFavoritesLoading());
-        await repo.addToFavorites(event.cid, event.favcatIds);
+        print(event.cid);
+        print(event.favcatIds.toString());
+        await repo.addToFavoritesToCats(event.cid, event.favcatIds);
         emit(AddToFavoritesSuccess());
       } on DioException catch (e) {
         String userMessage = 'خطایی رخ داد';
@@ -106,6 +109,42 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
         emit(AddToFavoritesFailure(message: userMessage));
       } catch (e) {
         emit(AddToFavoritesFailure(message: e.toString()));
+      }
+    });
+
+    on<DeleteFromFavorites>((event, emit) async{
+      try {
+        emit(DeleteFromFavoritesLoading());
+        await repo.deleteFromFavorites(event.cid, event.uid);
+        emit(DeleteFromFavoritesSuccess());
+      } on DioException catch(e) {
+        String userMessage = 'خطایی رخ داد';
+
+        if (e.response?.data is Map &&
+            (e.response!.data as Map).containsKey('message')) {
+          userMessage = e.response!.data['message'];
+        }
+        emit(DeleteFromFavoritesFailure(message: userMessage));
+      }catch(e) {
+        emit(DeleteFromFavoritesFailure(message: e.toString()));
+      }
+    });
+
+    on<GetFavoriteCategoryFavorites>((event, emit)async {
+      try {
+        emit(GetFavoriteCategoryFavoritesLoading());
+        final response = await repo.getFavCatFavorites(event.favcatId, event.userId);
+        emit(GetFavoriteCategoryFavoritesSuccess(response: response));
+      }on DioException catch(e) {
+        String userMessage = 'خطایی رخ داد';
+
+        if (e.response?.data is Map &&
+            (e.response!.data as Map).containsKey('message')) {
+          userMessage = e.response!.data['message'];
+        }
+        emit(GetFavoriteCategoryFavoritesFailure(message: userMessage));
+      } catch(e) {
+        emit(GetFavoriteCategoryFavoritesFailure(message: e.toString()));
       }
     });
   }

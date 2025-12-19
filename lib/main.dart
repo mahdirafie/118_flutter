@@ -1,10 +1,14 @@
 import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/core/config/api_service.dart';
+import 'package:basu_118/features/contact_detail/data/contact_repository_impl.dart';
+import 'package:basu_118/features/contact_detail/presentation/bloc/contact_detail_bloc.dart';
 import 'package:basu_118/features/favorites/data/favorite_repository_impl.dart';
 import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart';
 import 'package:basu_118/features/filter/data/filter_repository_impl.dart';
 import 'package:basu_118/features/filter/presentation/bloc/filter_api_bloc.dart';
 import 'package:basu_118/features/filter/presentation/bloc/filter_bloc.dart';
+import 'package:basu_118/features/home/data/home_repository_impl.dart';
+import 'package:basu_118/features/home/presentation/bloc/home_bloc.dart';
 import 'package:basu_118/features/profile/data/profile_repository_impl.dart';
 import 'package:basu_118/features/profile/presentaion/bloc/profile_bloc.dart';
 import 'package:basu_118/features/search/data/search_repository_impl.dart';
@@ -42,18 +46,32 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
+          create: (_) => HomeBloc(HomeRepositoryImpl(api: apiService)),
+        ),
+        BlocProvider(
           create:
               (_) =>
                   FavoriteBloc(FavoriteRepositoryImpl(api: apiService))
                     ..add(GetFavoriteCategories()),
         ),
         BlocProvider(
-          create: (_) => ProfileBloc(ProfileRepositoryImpl(api: apiService))..add(GetProfile()),
+          create:
+              (_) =>
+                  ProfileBloc(ProfileRepositoryImpl(api: apiService))
+                    ..add(GetProfile()),
         ),
         BlocProvider(create: (_) => FilterBloc()..add(FilterLoadEvent())),
-        BlocProvider(create: (_) => FilterApiBloc(FilterRepositoryImpl(api: apiService))),
-        BlocProvider(create: (_) => SearchBloc(SearchRepositoryImpl(api: apiService))),
-        BlocProvider(create: (_) => SearchHistoryBloc(SearchRepositoryImpl(api: apiService)))
+        BlocProvider(
+          create: (_) => FilterApiBloc(FilterRepositoryImpl(api: apiService)),
+        ),
+        BlocProvider(
+          create: (_) => SearchBloc(SearchRepositoryImpl(api: apiService)),
+        ),
+        BlocProvider(
+          create:
+              (_) => SearchHistoryBloc(SearchRepositoryImpl(api: apiService)),
+        ),
+        BlocProvider(create: (_) => ContactDetailBloc(ContactRepositoryImpl(api: apiService)))
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router,

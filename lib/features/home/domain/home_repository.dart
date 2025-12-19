@@ -1,9 +1,7 @@
-import 'package:basu_118/features/home/dto/employeef_dto.dart';
-import 'package:basu_118/features/home/dto/employeen_dto.dart';
-import 'package:basu_118/features/home/dto/user_home_dto.dart';
+
+
+import 'package:basu_118/features/home/dto/home_response_dto.dart';
 
 abstract class HomeRepository {
-  Future<EmployeeFDTO> getEmployeeF();
-  Future<EmployeeNDTO> getEmployeeN();
-  Future<UserHomeDTO> getUserHome();
+  Future<HomeResponseDTO> getHome(int userId);
 }

@@ -1,18 +1,30 @@
 import 'package:basu_118/features/favorites/presentation/update_favcat_dialog.dart';
+import 'package:basu_118/router/app_router.dart';
 import 'package:basu_118/widgets/app_snackbar.dart';
 import 'package:basu_118/widgets/custom_drawer.dart';
 import 'package:basu_118/features/favorites/presentation/delete_favcat_confirmation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart';
-// import 'package:basu_118/features/favorites/data/favorite_repository_impl.dart';
-// import 'package:basu_118/core/config/api_service.dart';
 import 'package:basu_118/theme/app_colors.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
+
+  @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Trigger GetFavoriteCategories on screen startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FavoriteBloc>().add(GetFavoriteCategories());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +65,6 @@ class FavoritesScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Icon(CupertinoIcons.back),
                     Text(
                       'محبوب ها',
                       style: TextStyle(
@@ -61,12 +72,11 @@ class FavoritesScreen extends StatelessWidget {
                         fontSize: 20,
                       ),
                     ),
-                    // Icon(CupertinoIcons.ellipsis_vertical),
                   ],
                 ),
               ),
 
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
 
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -83,13 +93,41 @@ class FavoritesScreen extends StatelessWidget {
                 child: BlocBuilder<FavoriteBloc, FavoriteState>(
                   builder: (context, state) {
                     if (state is FavoriteCategoryLoading) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: CupertinoActivityIndicator());
                     }
                     if (state is FavoriteCategoryFailure) {
                       return Center(
-                        child: Text(
-                          state.message,
-                          style: TextStyle(color: AppColors.error800),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              CupertinoIcons.exclamationmark_circle,
+                              size: 48,
+                              color: AppColors.neutral[400],
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              state.message,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppColors.neutral[600]),
+                            ),
+                            SizedBox(height: 24),
+                            ElevatedButton(
+                              onPressed: () {
+                                context.read<FavoriteBloc>().add(
+                                  GetFavoriteCategories(),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black87,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('تلاش مجدد'),
+                            ),
+                          ],
                         ),
                       );
                     }
@@ -97,9 +135,31 @@ class FavoritesScreen extends StatelessWidget {
                       final items = state.response.favoriteCategories;
                       if (items.isEmpty) {
                         return Center(
-                          child: Text(
-                            'موردی یافت نشد',
-                            style: TextStyle(color: AppColors.neutral[600]),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                CupertinoIcons.heart,
+                                size: 64,
+                                color: AppColors.neutral[300],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'هیچ دسته‌بندی‌ای وجود ندارد',
+                                style: TextStyle(
+                                  color: AppColors.neutral[500],
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'برای شروع روی دکمه + کلیک کنید',
+                                style: TextStyle(
+                                  color: AppColors.neutral[400],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }
@@ -120,9 +180,7 @@ class FavoritesScreen extends StatelessWidget {
                           final item = items[index];
                           return InkWell(
                             onTap: () {
-                              context.push(
-                                '/favorites/favorite-category-detail/${Uri.encodeComponent(item.title)}',
-                              );
+                              AppRouter.goToFavCategoryDetail(context, favcatId: item.favcatId, title: item.title);
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -207,7 +265,9 @@ class FavoritesScreen extends StatelessWidget {
                         },
                       );
                     }
-                    return const SizedBox.shrink();
+
+                    // Initial state - show loading
+                    return const Center(child: CupertinoActivityIndicator());
                   },
                 ),
               ),
@@ -254,6 +314,7 @@ class FavoritesScreen extends StatelessWidget {
               type: AppSnackBarType.success,
             );
 
+            // Refresh the list
             favoriteBloc.add(GetFavoriteCategories());
           }
 

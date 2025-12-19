@@ -9,6 +9,7 @@ import 'package:basu_118/features/search/presentation/bloc/search_history_bloc.d
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -624,6 +625,7 @@ class _SearchScreenState extends State<SearchScreen> {
       onTap: () {
         // Navigate to employee profile
         print('Employee tapped: ${employee.empId}');
+        context.push('/contact-detail/${employee.cid}');
         // Create search history
         _onCreateSearchHistory(employee.user.fullName);
       },
@@ -642,6 +644,7 @@ class _SearchScreenState extends State<SearchScreen> {
       onTap: () {
         // Navigate to post details
         print('Post tapped: ${post.pname}');
+        context.push('/contact-detail/${post.cid}');
         // Create search history
         _onCreateSearchHistory(post.pname);
       },
@@ -656,6 +659,7 @@ class _SearchScreenState extends State<SearchScreen> {
       onTap: () {
         // Navigate to space details
         print('Space tapped: ${space.sname}');
+        context.push('/contact-detail/${space.cid}');
         // Create search history
         _onCreateSearchHistory(space.sname);
       },

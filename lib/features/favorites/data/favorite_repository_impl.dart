@@ -2,6 +2,7 @@ import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/core/config/api_service.dart';
 import 'package:basu_118/features/favorites/domain/favorite_repository.dart';
 import 'package:basu_118/features/favorites/dto/favorite_category_dto.dart';
+import 'package:basu_118/features/favorites/dto/favorite_category_favorites_dto.dart';
 
 class FavoriteRepositoryImpl implements FavoriteRepository {
   final ApiService api;
@@ -17,9 +18,9 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
   }
   
   @override
-  Future<void> addToFavorites(int cid, List<int> favcatIds) async{
+  Future<void> addToFavoritesToCats(int cid, List<int> favcatIds) async{
     for(var favcatId in favcatIds){
-      await api.post('/favorites', {
+      await api.post('/favorite/add-fav', {
         'cid': cid,
         'favcat_id': favcatId,
       });
@@ -47,5 +48,19 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
       'favcat_id': categoryId,
       'new_title': newCategoryTitle
     });
+  }
+  
+  @override
+  Future<void> deleteFromFavorites(int cid, int uid) async{
+    await api.delete('/favorite/del-fav', data: {
+      'cid': cid,
+      'uid': uid
+    });
+  }
+
+  @override
+  Future<FavoriteCategoryFavoritesDTO> getFavCatFavorites(int favCatId, int userId)async {
+    final response = await api.get('/favorite/get-favcat-favs/$userId/$favCatId');
+    return FavoriteCategoryFavoritesDTO.fromJson(response.data);
   }
 }
