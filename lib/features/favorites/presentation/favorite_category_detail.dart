@@ -13,10 +13,10 @@ class FavoriteCategoryDetail extends StatefulWidget {
   final String title;
 
   const FavoriteCategoryDetail({
-    Key? key,
+    super.key,
     required this.favcatId,
     required this.title,
-  }) : super(key: key);
+  });
 
   @override
   State<FavoriteCategoryDetail> createState() => _FavoriteCategoryDetailState();
@@ -24,6 +24,7 @@ class FavoriteCategoryDetail extends StatefulWidget {
 
 class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
   bool _isLoading = true;
+  Set<int> _deletingItems = {}; // Track items being deleted
 
   @override
   void initState() {
@@ -74,6 +75,146 @@ class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
     }
   }
 
+  void _showDeleteConfirmation(BuildContext context, FavoriteItemFavCatFavs favorite) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              'حذف از علاقه‌مندی‌ها',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'آیا مطمئنید که می‌خواهید این مورد را از این دسته‌بندی حذف کنید؟',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: _getTypeColor(favorite.type).withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _getTypeIcon(favorite.type),
+                          size: 18,
+                          color: _getTypeColor(favorite.type),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              favorite.name,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade800,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              _getTypeLabel(favorite.type),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _getTypeColor(favorite.type),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(
+                  'لغو',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  _deleteFavorite(favorite);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'حذف',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _deleteFavorite(FavoriteItemFavCatFavs favorite) {
+    final userId = AuthService().userInfo?.uid;
+    if (userId == null) {
+      showAppSnackBar(
+        context,
+        message: 'خطا در شناسایی کاربر',
+        type: AppSnackBarType.error,
+      );
+      return;
+    }
+
+    // Add to deleting items set
+    setState(() {
+      _deletingItems.add(favorite.cid);
+    });
+
+    // Dispatch delete event
+    context.read<FavoriteBloc>().add(
+      DeleteFromFavorites(cid: favorite.cid, uid: userId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,6 +226,7 @@ class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
           icon: Icon(CupertinoIcons.back, color: Colors.grey.shade700),
           onPressed: () {
             context.pop();
+            context.read<FavoriteBloc>().add(GetFavoriteCategories());
           },
         ),
         centerTitle: true,
@@ -114,6 +256,39 @@ class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
             setState(() {
               _isLoading = false;
             });
+          }
+
+          // Handle delete success
+          if (state is DeleteFromFavoritesSuccess) {
+            // Clear deleting items
+            setState(() {
+              _deletingItems.clear();
+            });
+            
+            // Show success message
+            showAppSnackBar(
+              context,
+              message: 'با موفقیت حذف شد',
+              type: AppSnackBarType.success,
+            );
+            
+            // Refresh the list
+            _fetchFavorites();
+          }
+
+          // Handle delete failure
+          if (state is DeleteFromFavoritesFailure) {
+            // Clear deleting items
+            setState(() {
+              _deletingItems.clear();
+            });
+            
+            // Show error message
+            showAppSnackBar(
+              context,
+              message: state.message,
+              type: AppSnackBarType.error,
+            );
           }
         },
         builder: (context, state) {
@@ -245,98 +420,150 @@ class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
     final icon = _getTypeIcon(favorite.type);
     final color = _getTypeColor(favorite.type);
     final typeLabel = _getTypeLabel(favorite.type);
+    final isDeleting = _deletingItems.contains(favorite.cid);
 
     return GestureDetector(
-      onTap: () {
-        // Navigate to contact detail
-        context.go('/contact-detail/${favorite.cid}');
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              spreadRadius: 1,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon section
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
+      onTap: isDeleting
+          ? null
+          : () {
+              // Navigate to contact detail
+              context.push('/contact-detail/${favorite.cid}/${favorite.name}');
+            },
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDeleting ? Colors.grey.shade300 : Colors.grey.shade200,
+                width: 1,
               ),
-              child: Center(
-                child: Container(
-                  width: 56,
-                  height: 56,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDeleting ? 0.02 : 0.05),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon section
+                Container(
+                  height: 120,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    shape: BoxShape.circle,
+                    color: color.withOpacity(isDeleting ? 0.05 : 0.1),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
                   ),
-                  child: Icon(icon, size: 28, color: color),
-                ),
-              ),
-            ),
-
-            // Content section
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Title
-                    Text(
-                      favorite.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                        height: 1.4,
-                      ),
-                    ),
-
-                    // Type label
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                  child: Center(
+                    child: Container(
+                      width: 56,
+                      height: 56,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
+                        color: color.withOpacity(isDeleting ? 0.1 : 0.2),
+                        shape: BoxShape.circle,
                       ),
-                      child: Text(
-                        typeLabel,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: color,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                      child: isDeleting
+                          ? CupertinoActivityIndicator(
+                              radius: 14,
+                              color: color,
+                            )
+                          : Icon(icon, size: 28, color: color),
                     ),
-                  ],
+                  ),
+                ),
+
+                // Content section
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Title
+                        Text(
+                          favorite.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: isDeleting
+                                ? Colors.grey.shade400
+                                : Colors.black87,
+                            height: 1.4,
+                          ),
+                        ),
+
+                        // Type label
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(isDeleting ? 0.05 : 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            typeLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDeleting
+                                  ? Colors.grey.shade400
+                                  : color,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Remove icon button
+          if (!isDeleting)
+            Positioned(
+              top: 8,
+              left: 8,
+              child: GestureDetector(
+                onTap: () {
+                  _showDeleteConfirmation(context, favorite);
+                },
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    CupertinoIcons.trash,
+                    size: 16,
+                    color: Colors.red,
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

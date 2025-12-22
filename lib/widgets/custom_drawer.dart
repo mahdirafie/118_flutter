@@ -134,10 +134,13 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
                     iconPath: 'assets/images/remind.svg',
                     onTap: () {},
                   ),
+                  if(AuthService().userInfo!.userType! == "employee")
                   MenuItem(
                     title: 'گروه بندی',
                     iconData: CupertinoIcons.group,
-                    onTap: () {},
+                    onTap: () {
+                      context.push('/group');
+                    },
                   ),
                 ],
               ),

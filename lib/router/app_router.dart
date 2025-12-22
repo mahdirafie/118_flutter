@@ -4,6 +4,8 @@ import 'package:basu_118/features/contact_detail/presentation/contact_detail_scr
 import 'package:basu_118/features/error_screen.dart';
 import 'package:basu_118/features/favorites/presentation/favorite_category_detail.dart';
 import 'package:basu_118/features/favorites/presentation/favorites_screen.dart';
+import 'package:basu_118/features/group/presentation/group_members_screen.dart';
+import 'package:basu_118/features/group/presentation/group_screen.dart';
 import 'package:basu_118/features/home/presentation/home_screen.dart';
 import 'package:basu_118/features/profile/presentaion/profile_screen.dart';
 import 'package:basu_118/features/splash_screen.dart';
@@ -23,8 +25,10 @@ class AppRoutes {
   static const String signup = '/signup';
   static const String favorites = '/favorites';
   static const String profile = '/profile';
-  static const String contactDetail = '/contact-detail/:cid';
+  static const String contactDetail = '/contact-detail/:cid/:cname';
   static const String favCategoryDetail = '/favorite-category/:favcatId/:title';
+  static const String group = '/group';
+  static const String groupMembers = '/group-members/:gid';
 }
 
 class AppRouter {
@@ -108,7 +112,8 @@ class AppRouter {
         name: 'contactDetail',
         builder: (context, state) {
           final cid = int.tryParse(state.pathParameters['cid'] ?? '0') ?? 0;
-          return ContactDetailScreen(cid: cid);
+          final cname = state.pathParameters['cname'];
+          return ContactDetailScreen(cid: cid, cname: cname);
         },
       ),
 
@@ -122,6 +127,21 @@ class AppRouter {
           final title = state.pathParameters['title'] ?? '';
           return FavoriteCategoryDetail(favcatId: favcatId, title: title);
         },
+      ),
+
+      GoRoute(
+        path: AppRoutes.groupMembers,
+        name: 'groupMembers',
+        builder: (context, state) {
+          final gid = int.tryParse(state.pathParameters['gid'] ?? '0') ?? 0;
+          return GroupMembersScreen(gid: gid);
+        },
+      ),
+
+      GoRoute(
+        path: AppRoutes.group,
+        name: 'group',
+        builder: (context, state) => const GroupScreen(),
       ),
 
       // Shell route for bottom navigation
@@ -178,5 +198,12 @@ class AppRouter {
     required String title,
   }) {
     context.go('/favorite-category/$favcatId/${Uri.encodeComponent(title)}');
+  }
+
+  static void pushFavCategoryDetail(BuildContext context, {
+    required int favcatId,
+    required String title,
+  }) {
+    context.push('/favorite-category/$favcatId/${Uri.encodeComponent(title)}');
   }
 }

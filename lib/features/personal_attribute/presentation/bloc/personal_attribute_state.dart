@@ -1,0 +1,21 @@
+part of 'personal_attribute_bloc.dart';
+
+sealed class PersonalAttributeState extends Equatable {
+  const PersonalAttributeState();
+  
+  @override
+  List<Object> get props => [];
+}
+
+final class PersonalAttributeInitial extends PersonalAttributeState {}
+final class PersonalAttributeLoading extends PersonalAttributeState {}
+final class PersonalAttributeFailure extends PersonalAttributeState {
+  final String message;
+
+  const PersonalAttributeFailure({required this.message});
+}
+final class PersonalAttributeSuccess extends PersonalAttributeState {
+  final PersonalAttributeResponseDTO response;
+
+  const PersonalAttributeSuccess({required this.response});
+}

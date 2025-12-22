@@ -2,6 +2,8 @@
 import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/favorites/presentation/favorite_category_bottom_sheet.dart';
 import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart';
+import 'package:basu_118/features/group/presentation/add_to_group_bottom_sheet.dart';
+import 'package:basu_118/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,8 +13,13 @@ import 'package:go_router/go_router.dart';
 
 class ContactDetailScreen extends StatefulWidget {
   final int cid;
+  final String? cname;
 
-  const ContactDetailScreen({super.key, required this.cid});
+  const ContactDetailScreen({
+    super.key,
+    required this.cid,
+    required this.cname,
+  });
 
   @override
   State<ContactDetailScreen> createState() => _ContactDetailScreenState();
@@ -36,6 +43,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     });
   }
 
+  
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
@@ -52,10 +60,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               final userId = AuthService().userInfo?.uid;
               if (userId != null) {
                 context.read<ContactDetailBloc>().add(
-                  GetContactDetailStarted(
-                    cid: widget.cid,
-                    uid: userId,
-                  ),
+                  GetContactDetailStarted(cid: widget.cid, uid: userId),
                 );
               }
             }
@@ -87,6 +92,80 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
+          actions: [
+            // Show menu icon only for employees
+            BlocBuilder<ContactDetailBloc, ContactDetailState>(
+              builder: (context, state) {
+                if (state is GetContactDetailSuccess) {
+                  final contact = state.response.contact;
+
+                  // Check if contact is employee and show menu
+                  if (contact.contactType == 'employee') {
+                    return PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: Colors.grey.shade700),
+                      onSelected: (value) {
+                        _handleMenuSelection(value, contact);
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          PopupMenuItem<String>(
+                            value: 'add_to_group',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.group_add,
+                                  color: Colors.grey.shade700,
+                                ),
+                                SizedBox(width: 8),
+                                Text('افزودن به گروه'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'add_reminder',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.notifications,
+                                  color: Colors.grey.shade700,
+                                ),
+                                SizedBox(width: 8),
+                                Text('افزودن یادآور'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'additional_info',
+                            child: Row(
+                              children: [
+                                Icon(Icons.info, color: Colors.grey.shade700),
+                                SizedBox(width: 8),
+                                Text('اطلاعات تکمیلی'),
+                              ],
+                            ),
+                          ),
+                        ];
+                      },
+                    );
+                  }
+
+                  // For non-employee contacts, show only add reminder button
+                  return IconButton(
+                    icon: Icon(
+                      Icons.notifications,
+                      color: Colors.grey.shade700,
+                    ),
+                    onPressed: () {
+                      _handleAddReminder(contact);
+                    },
+                  );
+                }
+
+                // Return empty container while loading or on error
+                return Container();
+              },
+            ),
+          ],
         ),
         body: BlocBuilder<ContactDetailBloc, ContactDetailState>(
           builder: (context, state) {
@@ -94,6 +173,52 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
           },
         ),
       ),
+    );
+  }
+
+  void _handleMenuSelection(String value, ContactContact contact) {
+    switch (value) {
+      case 'add_to_group':
+        _handleAddToGroup(contact);
+        break;
+      case 'add_reminder':
+        _handleAddReminder(contact);
+        break;
+      case 'additional_info':
+        _handleAdditionalInfo(contact);
+        break;
+    }
+  }
+
+  void _handleAddToGroup(ContactContact contact) {
+    // Check if empId is available
+    final empId = contact.id;
+
+    // Show the add to group bottom sheet
+    AddToGroupBottomSheet.show(context: context, empId: empId);
+  }
+
+  void _handleAddReminder(ContactContact contact) {
+    // TODO: Navigate to add reminder screen
+    // You'll implement this later
+
+    // For now, show a message
+    showAppSnackBar(
+      context,
+      message: 'افزودن یادآور در حال توسعه است',
+      type: AppSnackBarType.info,
+    );
+  }
+
+  void _handleAdditionalInfo(ContactContact contact) {
+    // TODO: Navigate to additional info screen
+    // You'll implement this later
+
+    // For now, show a message
+    showAppSnackBar(
+      context,
+      message: 'مشاهده اطلاعات تکمیلی در حال توسعه است',
+      type: AppSnackBarType.info,
     );
   }
 
@@ -188,7 +313,10 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     return Container(); // Initial state
   }
 
-  Widget _buildProfileCard(ContactContact contact, GetContactDetailSuccess state) {
+  Widget _buildProfileCard(
+    ContactContact contact,
+    GetContactDetailSuccess state,
+  ) {
     // Get main title and icon based on contact type
     final (String title, IconData icon, String typeLabel) = _getContactMainInfo(
       contact,
@@ -285,9 +413,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                     top: BorderSide(color: Colors.grey.shade200, width: 1),
                   ),
                 ),
-                child: Center(
-                  child: _buildFavoriteButton(contact, isLoading),
-                ),
+                child: Center(child: _buildFavoriteButton(contact, isLoading)),
               ),
             ],
           ),
@@ -350,28 +476,22 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     if (selectedIds != null && selectedIds.isNotEmpty) {
       // Wait a bit to allow bottom sheet to close completely
       await Future.delayed(const Duration(milliseconds: 300));
-      
+
       final userId = AuthService().userInfo?.uid;
       if (userId != null) {
         context.read<ContactDetailBloc>().add(
-          GetContactDetailStarted(
-            cid: widget.cid,
-            uid: userId,
-          ),
+          GetContactDetailStarted(cid: widget.cid, uid: userId),
         );
       }
     }
     // If selectedIds is empty array, user selected "none" - still need to refresh
     else if (selectedIds != null && selectedIds.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
-      
+
       final userId = AuthService().userInfo?.uid;
       if (userId != null) {
         context.read<ContactDetailBloc>().add(
-          GetContactDetailStarted(
-            cid: widget.cid,
-            uid: userId,
-          ),
+          GetContactDetailStarted(cid: widget.cid, uid: userId),
         );
       }
     }
@@ -397,19 +517,17 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   (String, IconData, String) _getContactMainInfo(ContactContact contact) {
-    final relativeInfo = contact.relativeInfo;
-
     switch (contact.contactType) {
       case 'employee':
-        final employeeName = relativeInfo?.employee?.user?.fullName ?? 'کارمند';
+        final employeeName = widget.cname ?? 'کارمند';
         return (employeeName, CupertinoIcons.person_fill, 'کارمند');
 
       case 'post':
-        final postName = relativeInfo?.post?.pname ?? 'پست';
+        final postName = widget.cname ?? 'پست';
         return (postName, CupertinoIcons.briefcase_fill, 'پست سازمانی');
 
       case 'space':
-        final spaceName = relativeInfo?.space?.sname ?? 'فضا';
+        final spaceName = widget.cname ?? 'فضا';
         return (spaceName, CupertinoIcons.building_2_fill, 'فضای فیزیکی');
 
       default:
@@ -455,9 +573,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
             ),
           ),
         ),
-        ...contactInfos
-            .map((contactInfo) => _buildContactNumberCard(contactInfo))
-            ,
+        ...contactInfos.map(
+          (contactInfo) => _buildContactNumberCard(contactInfo),
+        ),
       ],
     );
   }
@@ -577,14 +695,12 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
         ),
 
         // Show related items based on contact type
-        ...relatedItems
-            .map(
-              (item) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildRelatedInfoCard(item),
-              ),
-            )
-            ,
+        ...relatedItems.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildRelatedInfoCard(item),
+          ),
+        ),
       ],
     );
   }

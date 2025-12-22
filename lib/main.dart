@@ -7,8 +7,13 @@ import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart
 import 'package:basu_118/features/filter/data/filter_repository_impl.dart';
 import 'package:basu_118/features/filter/presentation/bloc/filter_api_bloc.dart';
 import 'package:basu_118/features/filter/presentation/bloc/filter_bloc.dart';
+import 'package:basu_118/features/group/data/group_repository_impl.dart';
+import 'package:basu_118/features/group/presentation/bloc/group_bloc.dart';
+import 'package:basu_118/features/group/presentation/bloc/group_member_bloc.dart';
 import 'package:basu_118/features/home/data/home_repository_impl.dart';
 import 'package:basu_118/features/home/presentation/bloc/home_bloc.dart';
+import 'package:basu_118/features/personal_attribute/data/personal_attribute_repository_impl.dart';
+import 'package:basu_118/features/personal_attribute/presentation/bloc/personal_attribute_bloc.dart';
 import 'package:basu_118/features/profile/data/profile_repository_impl.dart';
 import 'package:basu_118/features/profile/presentaion/bloc/profile_bloc.dart';
 import 'package:basu_118/features/search/data/search_repository_impl.dart';
@@ -71,7 +76,10 @@ class MyApp extends StatelessWidget {
           create:
               (_) => SearchHistoryBloc(SearchRepositoryImpl(api: apiService)),
         ),
-        BlocProvider(create: (_) => ContactDetailBloc(ContactRepositoryImpl(api: apiService)))
+        BlocProvider(create: (_) => ContactDetailBloc(ContactRepositoryImpl(api: apiService))),
+        BlocProvider(create: (_) => GroupBloc(GroupRepositoryImpl(api: ApiService()))),
+        BlocProvider(create: (_) => GroupMemberBloc(GroupRepositoryImpl(api: apiService))),
+        BlocProvider(create: (_) => PersonalAttributeBloc(PersonalAttributeRepositoryImpl(api: apiService)))
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router,

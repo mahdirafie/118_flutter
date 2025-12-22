@@ -96,5 +96,3 @@ class _SnackContent extends StatelessWidget {
     );
   }
 }
-
-

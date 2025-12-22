@@ -18,6 +18,7 @@ class ContactDetailDTO {
 }
 
 class ContactContact {
+  final int id;
   final int cid;
   final String contactType;
   final bool isFavorite;
@@ -25,6 +26,7 @@ class ContactContact {
   final RelativeInfoContact? relativeInfo;
 
   ContactContact({
+    required this.id,
     required this.cid,
     required this.contactType,
     required this.isFavorite,
@@ -34,6 +36,7 @@ class ContactContact {
 
   factory ContactContact.fromJson(Map<String, dynamic> json) {
     return ContactContact(
+      id: json['id'],
       cid: json['cid'],
       contactType: json['contact_type'],
       isFavorite: json['is_favorite'],

@@ -180,7 +180,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           final item = items[index];
                           return InkWell(
                             onTap: () {
-                              AppRouter.goToFavCategoryDetail(context, favcatId: item.favcatId, title: item.title);
+                              AppRouter.pushFavCategoryDetail(context, favcatId: item.favcatId, title: item.title);
                             },
                             child: Container(
                               decoration: BoxDecoration(

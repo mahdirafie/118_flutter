@@ -625,7 +625,7 @@ class _SearchScreenState extends State<SearchScreen> {
       onTap: () {
         // Navigate to employee profile
         print('Employee tapped: ${employee.empId}');
-        context.push('/contact-detail/${employee.cid}');
+        context.push('/contact-detail/${employee.cid}/${employee.user.fullName}');
         // Create search history
         _onCreateSearchHistory(employee.user.fullName);
       },
@@ -644,7 +644,7 @@ class _SearchScreenState extends State<SearchScreen> {
       onTap: () {
         // Navigate to post details
         print('Post tapped: ${post.pname}');
-        context.push('/contact-detail/${post.cid}');
+        context.push('/contact-detail/${post.cid}/${post.pname}');
         // Create search history
         _onCreateSearchHistory(post.pname);
       },
@@ -659,7 +659,7 @@ class _SearchScreenState extends State<SearchScreen> {
       onTap: () {
         // Navigate to space details
         print('Space tapped: ${space.sname}');
-        context.push('/contact-detail/${space.cid}');
+        context.push('/contact-detail/${space.cid}/${space.sname}');
         // Create search history
         _onCreateSearchHistory(space.sname);
       },

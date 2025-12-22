@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? null
                   : () {
                     // Navigate to employee details
-                    context.push('/contact-detail/${employee.cid}');
+                    context.push('/contact-detail/${employee.cid}/${employee.fullName}');
                   },
           borderRadius: BorderRadius.circular(12),
           child: Container(
@@ -398,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? null
                   : () {
                     // Navigate to post details
-                    context.push('/contact-detail/${post.cid}');
+                    context.push('/contact-detail/${post.cid}/${post.pname}');
                   },
           borderRadius: BorderRadius.circular(12),
           child: Container(
@@ -495,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? null
                   : () {
                     // Navigate to space details
-                    context.push('/contact-detail/${space.cid}');
+                    context.push('/contact-detail/${space.cid}/${space.sname}');
                   },
           borderRadius: BorderRadius.circular(12),
           child: Container(

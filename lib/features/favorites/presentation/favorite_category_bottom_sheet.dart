@@ -1,5 +1,6 @@
 // favorite_category_bottom_sheet.dart
 import 'package:basu_118/core/auth_service/auth_service.dart';
+import 'package:basu_118/features/favorites/dto/favorite_category_dto.dart';
 import 'package:basu_118/features/home/presentation/bloc/home_bloc.dart';
 import 'package:basu_118/widgets/app_snackbar.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,7 +11,7 @@ import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart
 class FavoriteCategoryBottomSheet {
   static Future<List<int>?> show({
     required BuildContext context,
-    required int cid, // Added cid parameter
+    required int cid,
     List<int>? initiallySelectedIds,
   }) async {
     return await showModalBottomSheet<List<int>>(
@@ -37,7 +38,7 @@ class FavoriteCategoryBottomSheet {
 }
 
 class _FavoriteCategoryBottomSheetContent extends StatefulWidget {
-  final int cid; // Added cid
+  final int cid;
   final List<int> initiallySelectedIds;
 
   const _FavoriteCategoryBottomSheetContent({
@@ -53,16 +54,15 @@ class _FavoriteCategoryBottomSheetContent extends StatefulWidget {
 class __FavoriteCategoryBottomSheetContentState
     extends State<_FavoriteCategoryBottomSheetContent> {
   late List<int> _selectedIds;
-  bool _isNoneSelected = false;
   bool _isAdding = false;
-  bool _hasHandledSuccess = false; // Add this flag
+  bool _hasHandledSuccess = false;
+  int? _allCategoryId; // Store the ID of the "همه" category
 
   @override
   void initState() {
     super.initState();
     _selectedIds = List.from(widget.initiallySelectedIds);
-    _isNoneSelected = _selectedIds.isEmpty;
-
+    
     // Trigger fetch on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<FavoriteBloc>().add(GetFavoriteCategories());
@@ -71,16 +71,21 @@ class __FavoriteCategoryBottomSheetContentState
 
   void _toggleSelection(int favcatId, String title) {
     setState(() {
-      final isNoneCategory = _getDisplayTitle(title) == 'هیچکدام';
-
-      if (isNoneCategory) {
-        // If selecting "هیچکدام", clear all other selections
+      final isAllCategory = title == 'همه';
+      
+      if (isAllCategory) {
+        // If selecting "همه" (displayed as "هیچکدام")
+        // Clear all other selections and only select "همه"
         _selectedIds.clear();
-        _isNoneSelected = true;
+        _selectedIds.add(favcatId);
       } else {
-        // If selecting a regular category, unselect "هیچکدام" if selected
-        _isNoneSelected = false;
-
+        // If selecting a regular category
+        // Remove "همه" if it's selected
+        if (_allCategoryId != null && _selectedIds.contains(_allCategoryId)) {
+          _selectedIds.remove(_allCategoryId!);
+        }
+        
+        // Toggle the selected category
         if (_selectedIds.contains(favcatId)) {
           _selectedIds.remove(favcatId);
         } else {
@@ -91,9 +96,6 @@ class __FavoriteCategoryBottomSheetContentState
   }
 
   bool _isSelected(int favcatId, String title) {
-    if (_getDisplayTitle(title) == 'هیچکدام') {
-      return _isNoneSelected;
-    }
     return _selectedIds.contains(favcatId);
   }
 
@@ -101,17 +103,34 @@ class __FavoriteCategoryBottomSheetContentState
     return originalTitle == 'همه' ? 'هیچکدام' : originalTitle;
   }
 
+  // Helper method to initialize or update the selection based on loaded categories
+  void _updateSelectionWithAllCategory(List<FavoriteCategories> categories) {
+    // Find the "همه" category
+    final allCategory = categories.firstWhere(
+      (category) => category.title == 'همه',
+      orElse: () => FavoriteCategories(favcatId: -1, title: '', createdAt: ''),
+    );
+    
+    if (allCategory.favcatId != -1) {
+      _allCategoryId = allCategory.favcatId;
+      
+      // If no categories are selected yet, automatically select "همه"
+      if (_selectedIds.isEmpty) {
+        _selectedIds.add(_allCategoryId!);
+      }
+    }
+  }
+
   void _handleAdd(BuildContext context) {
-    if (_isAdding) return; // Prevent multiple clicks
+    if (_isAdding) return;
 
     // Reset the success flag
     _hasHandledSuccess = false;
 
-    // If "هیچکدام" is selected, send empty list
-    final List<int> favcatIds = _isNoneSelected ? [] : _selectedIds;
+    print("SELECTED IDs: $_selectedIds");
 
     // Dispatch the AddToFavorites event
-    context.read<FavoriteBloc>().add(AddToFavorites(widget.cid, favcatIds));
+    context.read<FavoriteBloc>().add(AddToFavorites(widget.cid, _selectedIds));
 
     setState(() {
       _isAdding = true;
@@ -143,7 +162,6 @@ class __FavoriteCategoryBottomSheetContentState
     // Handle AddToFavorites failure
     if (state is AddToFavoritesFailure) {
       // Show error message
-      // TODO: FIX THIS
       showAppSnackBar(
         context,
         message: state.message,
@@ -282,6 +300,9 @@ class __FavoriteCategoryBottomSheetContentState
 
     if (state is FavoriteCategorySuccess) {
       final categories = state.response.favoriteCategories;
+      
+      // Update selection to include "همه" category if nothing is selected
+      _updateSelectionWithAllCategory(categories);
 
       if (categories.isEmpty) {
         return Center(
@@ -306,6 +327,9 @@ class __FavoriteCategoryBottomSheetContentState
           final category = categories[index];
           final displayTitle = _getDisplayTitle(category.title);
           final isSelected = _isSelected(category.favcatId, category.title);
+          
+          // Special handling for "همه" category
+          final isAllCategory = category.title == 'همه';
 
           return Card(
             elevation: 0,
@@ -326,12 +350,11 @@ class __FavoriteCategoryBottomSheetContentState
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? Colors.blue.shade50 : Colors.grey.shade100,
+                  color: isSelected ? Colors.blue.shade50 : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
-                  displayTitle == 'هیچکدام' ? Icons.block : Icons.category,
+                  isAllCategory ? Icons.block : Icons.category,
                   size: 20,
                   color: isSelected ? Colors.blue : Colors.grey.shade600,
                 ),
@@ -344,15 +367,20 @@ class __FavoriteCategoryBottomSheetContentState
                   color: isSelected ? Colors.blue : Colors.grey.shade800,
                 ),
               ),
-              trailing:
-                  isSelected
-                      ? Icon(Icons.check_circle, color: Colors.blue, size: 24)
-                      : null,
-              onTap:
-                  _isAdding
-                      ? null // Disable taps when adding
-                      : () =>
-                          _toggleSelection(category.favcatId, category.title),
+              subtitle: isAllCategory && isSelected ? 
+                Text(
+                  'همه دسته‌بندی‌ها',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ) : null,
+              trailing: isSelected
+                  ? Icon(Icons.check_circle, color: Colors.blue, size: 24)
+                  : null,
+              onTap: _isAdding
+                  ? null
+                  : () => _toggleSelection(category.favcatId, category.title),
             ),
           );
         },
@@ -390,12 +418,11 @@ class __FavoriteCategoryBottomSheetContentState
           // Cancel Button
           Expanded(
             child: OutlinedButton(
-              onPressed:
-                  _isAdding
-                      ? null
-                      : () {
-                        Navigator.of(context).pop();
-                      },
+              onPressed: _isAdding
+                  ? null
+                  : () {
+                      Navigator.of(context).pop();
+                    },
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 side: BorderSide(color: Colors.grey.shade300),
@@ -406,8 +433,7 @@ class __FavoriteCategoryBottomSheetContentState
               child: Text(
                 'انصراف',
                 style: TextStyle(
-                  color:
-                      _isAdding ? Colors.grey.shade400 : Colors.grey.shade700,
+                  color: _isAdding ? Colors.grey.shade400 : Colors.grey.shade700,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -421,28 +447,26 @@ class __FavoriteCategoryBottomSheetContentState
             child: ElevatedButton(
               onPressed: _isAdding ? null : () => _handleAdd(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    _isAdding ? Colors.grey.shade400 : Colors.blue,
+                backgroundColor: _isAdding ? Colors.grey.shade400 : Colors.blue,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child:
-                  _isAdding
-                      ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CupertinoActivityIndicator(),
-                      )
-                      : Text(
-                        'افزودن',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+              child: _isAdding
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CupertinoActivityIndicator(),
+                    )
+                  : Text(
+                      'افزودن',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
             ),
           ),
         ],
