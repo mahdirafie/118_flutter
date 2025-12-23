@@ -1,4 +1,3 @@
-import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/core/config/api_service.dart';
 import 'package:basu_118/features/favorites/domain/favorite_repository.dart';
 import 'package:basu_118/features/favorites/dto/favorite_category_dto.dart';
@@ -10,9 +9,7 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
   FavoriteRepositoryImpl({required this.api});
   @override
   Future<GetFavoriteCategoriesDTO> getFavoriteCategories() async{
-    final response = await api.post('/favorite/user/get-fav-cats', {
-      "uid": AuthService().userInfo?.uid
-    });
+    final response = await api.get('/favorite/user/get-fav-cats');
 
     return GetFavoriteCategoriesDTO.fromJson(response.data);
   }
@@ -30,16 +27,13 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
   @override
   Future<void> createFavoriteCategory(String categoryTitle) async{
     await api.post('/favorite/add-fav-cat', {
-      'user_id': AuthService().userInfo?.uid,
       'category_title': categoryTitle
     });
   }
   
   @override
   Future<void> deleteFavoriteCategory(int categoryId) async{
-    await api.delete('/favorite/delete-cat',data:  {
-      'favcat_id': categoryId
-    });
+    await api.delete('/favorite/delete-cat/$categoryId');
   }
   
     @override
@@ -51,16 +45,13 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
   }
   
   @override
-  Future<void> deleteFromFavorites(int cid, int uid) async{
-    await api.delete('/favorite/del-fav', data: {
-      'cid': cid,
-      'uid': uid
-    });
+  Future<void> deleteFromFavorites(int cid) async{
+    await api.delete('/favorite/del-fav/$cid');
   }
 
   @override
-  Future<FavoriteCategoryFavoritesDTO> getFavCatFavorites(int favCatId, int userId)async {
-    final response = await api.get('/favorite/get-favcat-favs/$userId/$favCatId');
+  Future<FavoriteCategoryFavoritesDTO> getFavCatFavorites(int favCatId)async {
+    final response = await api.get('/favorite/get-favcat-favs/$favCatId');
     return FavoriteCategoryFavoritesDTO.fromJson(response.data);
   }
 }

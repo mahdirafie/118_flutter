@@ -48,10 +48,11 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final userInfo = AuthService().userInfo; // SAFE reference
 
     return Drawer(
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero, // << remove the default radius
+        borderRadius: BorderRadius.zero,
       ),
       width: width,
       backgroundColor: AppColors.neutral[50],
@@ -80,7 +81,6 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
                         ),
                       ),
                       const SizedBox(height: 8),
-
                       Row(
                         children: [
                           const Icon(
@@ -98,9 +98,7 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 4),
-
                       Row(
                         children: [
                           const Icon(
@@ -110,7 +108,7 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            _timeOnly(), // new helper for time only
+                            _timeOnly(),
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.neutral[500],
@@ -123,6 +121,7 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
                 ],
               ),
             ),
+
             const SizedBox(height: 10),
 
             Container(
@@ -134,14 +133,14 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
                     iconPath: 'assets/images/remind.svg',
                     onTap: () {},
                   ),
-                  if(AuthService().userInfo!.userType! == "employee")
-                  MenuItem(
-                    title: 'گروه بندی',
-                    iconData: CupertinoIcons.group,
-                    onTap: () {
-                      context.push('/group');
-                    },
-                  ),
+                  if (userInfo?.userType == "employee")
+                    MenuItem(
+                      title: 'گروه بندی',
+                      iconData: CupertinoIcons.group,
+                      onTap: () {
+                        context.push('/group');
+                      },
+                    ),
                 ],
               ),
             ),
@@ -153,26 +152,30 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
                 showConfirmDialog(
                   context: context,
                   title: 'خروج از حساب',
-                  description: 'آیا از خروج اطمینان دارید؟ با این کار از حساب خارج می‌شوید.',
+                  description:
+                      'آیا از خروج اطمینان دارید؟ با این کار از حساب خارج می‌شوید.',
                   confirmText: 'خروج',
                   cancelText: 'انصراف',
-                  onConfirm: () async{
-                    await AuthService().clearUserInfo();
-                    await AuthService().clearTokens();
+                  onConfirm: () async {
+                    await AuthService().logout();
 
-                    if(!context.mounted) return;
+                    if (!context.mounted) return;
                     context.go('/login');
                   },
                 );
               },
               child: Container(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 color: AppColors.neutral[0],
                 child: Row(
                   children: [
-                    Icon(Icons.logout, color: AppColors.error800, size: 20),
-                    SizedBox(width: 15,),
-                    Text('خروج', style: TextStyle(color: AppColors.error800),)
+                    Icon(Icons.logout,
+                        color: AppColors.error800, size: 20),
+                    const SizedBox(width: 15),
+                    Text(
+                      'خروج',
+                      style: TextStyle(color: AppColors.error800),
+                    )
                   ],
                 ),
               ),
@@ -204,14 +207,16 @@ class MenuItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Row(
           children: [
             iconData != null && iconPath == null
                 ? Icon(iconData, color: AppColors.neutral[700])
                 : SvgPicture.asset(iconPath!, width: 16, height: 16),
-            SizedBox(width: 15),
-            Text(title, style: TextStyle(color: AppColors.neutral[900])),
+            const SizedBox(width: 15),
+            Text(title,
+                style: TextStyle(color: AppColors.neutral[900])),
             Expanded(
               child: Container(
                 alignment: Alignment.centerLeft,

@@ -16,14 +16,14 @@ class PersonalAttributeScreen extends StatefulWidget {
 
 class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
   final Map<int, TextEditingController> _controllers = {};
-  final Map<int, String> _originalValues = {};
+  final Map<int, String?> _originalValues = {};
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _hasChanges = false;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    // Fetch personal attributes on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PersonalAttributeBloc>().add(GetPersonalAttributesEvent());
     });
@@ -31,7 +31,6 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
 
   @override
   void dispose() {
-    // Dispose all controllers
     for (final controller in _controllers.values) {
       controller.dispose();
     }
@@ -39,20 +38,17 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
   }
 
   void _initializeControllers(List<PersonalAttributeDTO> attributes) {
-    // Clear existing controllers
     for (final controller in _controllers.values) {
       controller.dispose();
     }
     _controllers.clear();
     _originalValues.clear();
 
-    // Create controllers for each attribute
     for (final attribute in attributes) {
       final controller = TextEditingController(text: attribute.value ?? '');
       _controllers[attribute.attId] = controller;
-      _originalValues[attribute.attId] = attribute.value ?? '';
+      _originalValues[attribute.attId] = attribute.value;
 
-      // Add listener to track changes
       controller.addListener(() {
         _checkForChanges();
       });
@@ -65,9 +61,10 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
     for (final entry in _controllers.entries) {
       final attId = entry.key;
       final controller = entry.value;
-      final originalValue = _originalValues[attId] ?? '';
+      final originalValue = _originalValues[attId];
 
-      if (controller.text != originalValue) {
+      final currentValue = controller.text.isEmpty ? null : controller.text;
+      if (currentValue != originalValue) {
         hasChanges = true;
         break;
       }
@@ -81,7 +78,6 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
   }
 
   String _getFieldLabel(PersonalAttributeDTO attribute) {
-    // Customize label based on attribute type if needed
     switch (attribute.type.toLowerCase()) {
       case 'phone':
         return 'شماره ${attribute.attName}';
@@ -111,10 +107,9 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
 
   String? _validateField(String? value, PersonalAttributeDTO attribute) {
     if (value == null || value.isEmpty) {
-      return 'لطفا ${_getFieldLabel(attribute)} را وارد کنید';
+      return null;
     }
 
-    // Add specific validations based on type
     switch (attribute.type.toLowerCase()) {
       case 'email':
         final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
@@ -138,7 +133,7 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
     return null;
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) {
       showAppSnackBar(
         context,
@@ -148,50 +143,66 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
       return;
     }
 
-    // Prepare data for API call
-    final Map<int, String> updatedValues = {};
+    // Send ALL fields, not just changed ones
+    final List<Map<String, dynamic>> attributesToUpdate = [];
 
     for (final entry in _controllers.entries) {
       final attId = entry.key;
       final controller = entry.value;
-      final originalValue = _originalValues[attId] ?? '';
-
-      // Only include changed values
-      if (controller.text != originalValue) {
-        updatedValues[attId] = controller.text;
-      }
+      
+      // Always include ALL fields, even unchanged ones
+      attributesToUpdate.add({
+        'att_id': attId,
+        'value': controller.text.isEmpty ? null : controller.text,
+      });
     }
 
-    if (updatedValues.isEmpty) {
+    if (attributesToUpdate.isEmpty) {
       showAppSnackBar(
         context,
-        message: 'تغییری اعمال نشده است',
+        message: 'هیچ فیلدی برای ارسال وجود ندارد',
         type: AppSnackBarType.info,
       );
       return;
     }
 
-    // TODO: Implement API call here
-    // For now, show a success message
-    showAppSnackBar(
-      context,
-      message: 'تغییرات با موفقیت ذخیره شد',
-      type: AppSnackBarType.success,
-    );
-
-    // Update original values
-    for (final entry in updatedValues.entries) {
-      _originalValues[entry.key] = entry.value;
-    }
-
-    // Reset changes flag
     setState(() {
-      _hasChanges = false;
+      _isSubmitting = true;
     });
 
-    // Show success dialog
+    try {
+      context.read<PersonalAttributeBloc>().add(
+        SetPersonalAttributeValuesEvent(attributes: attributesToUpdate),
+      );
+    } catch (error) {
+      setState(() {
+        _isSubmitting = false;
+      });
+      
+      showAppSnackBar(
+        context,
+        message: 'خطا در ارسال درخواست: ${error.toString()}',
+        type: AppSnackBarType.error,
+      );
+    }
+  }
+
+  void _handleSubmitSuccess(String message) {
+    // Update original values for ALL fields
+    for (final entry in _controllers.entries) {
+      final attId = entry.key;
+      final controller = entry.value;
+      _originalValues[attId] = controller.text.isEmpty ? null : controller.text;
+    }
+
+    setState(() {
+      _hasChanges = false;
+      _isSubmitting = false;
+    });
+
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return Directionality(
           textDirection: TextDirection.rtl,
@@ -207,19 +218,24 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, size: 48, color: Colors.green),
+                const Icon(Icons.check_circle, size: 48, color: Colors.green),
                 const SizedBox(height: 16),
-                const Text(
-                  'اطلاعات شما با موفقیت به‌روزرسانی شد',
+                Text(
+                  message,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
             actions: [
               Center(
                 child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.read<PersonalAttributeBloc>().add(
+                      GetPersonalAttributesEvent(),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
@@ -237,13 +253,24 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
     );
   }
 
+  void _handleSubmitFailure(String errorMessage) {
+    setState(() {
+      _isSubmitting = false;
+    });
+
+    showAppSnackBar(
+      context,
+      message: errorMessage,
+      type: AppSnackBarType.error,
+    );
+  }
+
   void _handleCancel() {
-    // Reset all controllers to original values
     for (final entry in _controllers.entries) {
       final attId = entry.key;
       final controller = entry.value;
-      final originalValue = _originalValues[attId] ?? '';
-      controller.text = originalValue;
+      final originalValue = _originalValues[attId];
+      controller.text = originalValue ?? '';
     }
 
     setState(() {
@@ -286,6 +313,14 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
               message: state.message,
               type: AppSnackBarType.error,
             );
+          }
+          
+          if (state is SetPersonalAttributeValuesSuccess) {
+            _handleSubmitSuccess(state.message);
+          }
+          
+          if (state is SetPersonalAttributeValuesFailure) {
+            _handleSubmitFailure(state.message);
           }
         },
         builder: (context, state) {
@@ -357,19 +392,36 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
   }
 
   Widget _buildBody(PersonalAttributeState state) {
-    if (state is PersonalAttributeLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CupertinoActivityIndicator(radius: 16),
-            SizedBox(height: 16),
-            Text(
-              'در حال دریافت اطلاعات...',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+    if (state is PersonalAttributeLoading || 
+        state is SetPersonalAttributeValuesLoading ||
+        _isSubmitting) {
+      return Stack(
+        children: [
+          if (state is PersonalAttributeSuccess) 
+            _buildSuccessContent(state)
+          else
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CupertinoActivityIndicator(radius: 16),
+                  const SizedBox(height: 16),
+                  Text(
+                    _isSubmitting ? 'در حال ذخیره تغییرات...' : 'در حال دریافت اطلاعات...',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          
+          if (_isSubmitting)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(
+                child: CupertinoActivityIndicator(radius: 20),
+              ),
+            ),
+        ],
       );
     }
 
@@ -383,7 +435,7 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
               size: 48,
               color: Colors.grey.shade400,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
@@ -392,7 +444,7 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
                 context.read<PersonalAttributeBloc>().add(
@@ -414,252 +466,319 @@ class _PersonalAttributeScreenState extends State<PersonalAttributeScreen> {
     }
 
     if (state is PersonalAttributeSuccess) {
-      final attributes = state.response.attributes;
+      return _buildSuccessContent(state);
+    }
 
-      // Initialize controllers if not already done
-      if (_controllers.isEmpty) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _initializeControllers(attributes);
-        });
+    if (state is SetPersonalAttributeValuesFailure) {
+      if (_controllers.isNotEmpty) {
+        return _buildSuccessContentFromControllers();
       }
-
-      if (attributes.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                CupertinoIcons.person,
-                size: 64,
-                color: Colors.grey.shade300,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'هیچ اطلاعات شخصی‌ای تعریف نشده است',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade500),
-              ),
-            ],
-          ),
-        );
-      }
-
-      return Form(
-        key: _formKey,
+      
+      return Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  context.read<PersonalAttributeBloc>().add(
-                    GetPersonalAttributesEvent(),
-                  );
-                },
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // Information card
-                    Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: Colors.grey.shade200, width: 1),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 20,
-                                  color: Colors.blue,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'راهنما',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'لطفا اطلاعات شخصی خود را با دقت وارد کنید. این اطلاعات برای خدمات بهتر به شما استفاده خواهد شد.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                                height: 1.6,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-
-                    // Attribute fields
-                    ...attributes.map((attribute) {
-                      final controller = _controllers[attribute.attId];
-                      if (controller == null) {
-                        return SizedBox.shrink();
-                      }
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _getFieldLabel(attribute),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade800,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              controller: controller,
-                              keyboardType: _getKeyboardType(attribute),
-                              textDirection: TextDirection.rtl,
-                              textAlign: TextAlign.right,
-                              decoration: InputDecoration(
-                                hintText:
-                                    '${_getFieldLabel(attribute)} را وارد کنید',
-                                hintTextDirection: TextDirection.rtl,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.blue,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: Colors.grey.shade50,
-                                suffixIcon:
-                                    attribute.value != null &&
-                                            attribute.value!.isNotEmpty
-                                        ? Icon(
-                                          Icons.check_circle,
-                                          size: 20,
-                                          color: Colors.green,
-                                        )
-                                        : null,
-                              ),
-                              validator:
-                                  (value) => _validateField(value, attribute),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ],
-                ),
+            Icon(
+              CupertinoIcons.exclamationmark_circle,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                state.message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
             ),
-
-            // Submit button
-            if (_hasChanges)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    top: BorderSide(color: Colors.grey.shade200, width: 1),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _handleCancel,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: Colors.grey.shade300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          'انصراف',
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _handleSubmit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          'ذخیره تغییرات',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                context.read<PersonalAttributeBloc>().add(
+                  GetPersonalAttributesEvent(),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black87,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
+              child: const Text('بازگشت'),
+            ),
           ],
         ),
       );
     }
 
-    // Initial state
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(CupertinoIcons.person, size: 48, color: Colors.grey.shade300),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'در حال بارگذاری...',
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuccessContent(PersonalAttributeSuccess state) {
+    final attributes = state.response.attributes;
+
+    if (_controllers.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeControllers(attributes);
+      });
+    }
+
+    return _buildForm(attributes);
+  }
+
+  Widget _buildSuccessContentFromControllers() {
+    return _buildForm([]);
+  }
+
+  Widget _buildForm(List<PersonalAttributeDTO> attributes) {
+    final hasAttributes = attributes.isNotEmpty || _controllers.isNotEmpty;
+
+    if (!hasAttributes) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.person,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'هیچ اطلاعات شخصی‌ای تعریف نشده است',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final displayAttributes = attributes.isNotEmpty 
+        ? attributes 
+        : _controllers.keys.map((attId) => PersonalAttributeDTO(
+              attId: attId,
+              attName: 'Attribute $attId',
+              type: 'text',
+              value: _originalValues[attId],
+            )).toList();
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                context.read<PersonalAttributeBloc>().add(
+                  GetPersonalAttributesEvent(),
+                );
+              },
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 20,
+                                color: Colors.blue,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'راهنما',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'لطفا اطلاعات شخصی خود را با دقت وارد کنید. این اطلاعات برای خدمات بهتر به شما استفاده خواهد شد.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                              height: 1.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  ...displayAttributes.map((attribute) {
+                    final controller = _controllers[attribute.attId];
+                    if (controller == null) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getFieldLabel(attribute),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: controller,
+                            keyboardType: _getKeyboardType(attribute),
+                            textDirection: TextDirection.rtl,
+                            textAlign: TextAlign.right,
+                            decoration: InputDecoration(
+                              hintText: '${_getFieldLabel(attribute)} را وارد کنید',
+                              hintTextDirection: TextDirection.rtl,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Colors.blue,
+                                  width: 1.5,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              suffixIcon: controller.text.isNotEmpty
+                                  ? const Icon(
+                                      Icons.check_circle,
+                                      size: 20,
+                                      color: Colors.green,
+                                    )
+                                  : null,
+                            ),
+                            validator: (value) => _validateField(value, attribute),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ],
+              ),
+            ),
+          ),
+
+          if (_hasChanges)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200, width: 1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _isSubmitting ? null : _handleCancel,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'انصراف',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting ? null : _handleSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'ذخیره تغییرات',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

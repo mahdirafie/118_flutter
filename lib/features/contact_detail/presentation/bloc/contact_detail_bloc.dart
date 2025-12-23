@@ -13,7 +13,7 @@ class ContactDetailBloc extends Bloc<ContactDetailEvent, ContactDetailState> {
     on<GetContactDetailStarted>((event, emit) async{
      try {
       emit(GetContactDetailLoading());
-      final response = await repo.getContactDetail(event.cid, event.uid);
+      final response = await repo.getContactDetail(event.cid);
       emit(GetContactDetailSuccess(response: response));
      } on DioException catch(e) {
       String userMessage = 'خطایی رخ داد';

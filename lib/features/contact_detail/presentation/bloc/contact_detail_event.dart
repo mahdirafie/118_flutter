@@ -9,7 +9,6 @@ sealed class ContactDetailEvent extends Equatable {
 
 final class GetContactDetailStarted extends ContactDetailEvent {
   final int cid;
-  final int uid;
 
-  const GetContactDetailStarted({required this.cid, required this.uid});
+  const GetContactDetailStarted({required this.cid});
 }

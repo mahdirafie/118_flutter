@@ -40,7 +40,7 @@ class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
     final userId = AuthService().userInfo?.uid;
     if (userId != null && widget.favcatId > 0) {
       context.read<FavoriteBloc>().add(
-        GetFavoriteCategoryFavorites(favcatId: widget.favcatId, userId: userId),
+        GetFavoriteCategoryFavorites(favcatId: widget.favcatId),
       );
     } else {
       setState(() {
@@ -194,15 +194,11 @@ class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
   }
 
   void _deleteFavorite(FavoriteItemFavCatFavs favorite) {
-    final userId = AuthService().userInfo?.uid;
-    if (userId == null) {
       showAppSnackBar(
         context,
         message: 'خطا در شناسایی کاربر',
         type: AppSnackBarType.error,
       );
-      return;
-    }
 
     // Add to deleting items set
     setState(() {
@@ -211,7 +207,7 @@ class _FavoriteCategoryDetailState extends State<FavoriteCategoryDetail> {
 
     // Dispatch delete event
     context.read<FavoriteBloc>().add(
-      DeleteFromFavorites(cid: favorite.cid, uid: userId),
+      DeleteFromFavorites(cid: favorite.cid),
     );
   }
 

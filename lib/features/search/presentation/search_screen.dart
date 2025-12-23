@@ -1,6 +1,4 @@
-// search_screen.dart
 import 'dart:async';
-import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/filter/presentation/bloc/filter_bloc.dart';
 import 'package:basu_118/features/search/data/dto/search_dto.dart';
 import 'package:basu_118/features/search/data/dto/search_history_dto.dart';
@@ -46,10 +44,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _loadSearchHistory() {
-    // Assuming you have userId available - replace with your actual userId
-    var userId = AuthService().userInfo!.uid!; // Replace with actual user ID
     context.read<SearchHistoryBloc>().add(
-      GetSearchHistoryStarted(userId: userId),
+      GetSearchHistoryStarted(),
     );
   }
 
@@ -160,9 +156,8 @@ class _SearchScreenState extends State<SearchScreen> {
       _creatingHistory = true;
     });
 
-    var uid = AuthService().userInfo!.uid!; // Replace with actual user ID from your auth state
     context.read<SearchHistoryBloc>().add(
-      CreateSearchHistory(query: query, uid: uid),
+      CreateSearchHistory(query: query),
     );
   }
 

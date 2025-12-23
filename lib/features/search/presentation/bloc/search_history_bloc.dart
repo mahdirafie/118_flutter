@@ -13,7 +13,7 @@ class SearchHistoryBloc extends Bloc<SearchHistoryEvent, SearchHistoryState> {
     on<GetSearchHistoryStarted>((event, emit) async{
       try {
         emit(GetSearchHistoryLoading());
-        final response = await repo.searchHistories(event.userId);
+        final response = await repo.searchHistories();
         emit(GetSearchHistorySuccess(response: response));
       }on DioException catch(e) {
         String userMessage = 'خطایی رخ داد';
@@ -49,7 +49,7 @@ class SearchHistoryBloc extends Bloc<SearchHistoryEvent, SearchHistoryState> {
     on<CreateSearchHistory>((event, emit) async{
       try {
         emit(CreateSearchHistoryLoading());
-        await repo.createSearchHistory(event.query, event.uid);
+        await repo.createSearchHistory(event.query);
         emit(CreateSearchHistorySuccess(message: "تاریخچه با موفقیت ساخته شد!"));
       }on DioException catch(e) {
         String userMessage = 'خطایی رخ داد';

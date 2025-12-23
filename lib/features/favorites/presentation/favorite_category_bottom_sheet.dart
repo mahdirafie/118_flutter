@@ -1,5 +1,4 @@
 // favorite_category_bottom_sheet.dart
-import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/favorites/dto/favorite_category_dto.dart';
 import 'package:basu_118/features/home/presentation/bloc/home_bloc.dart';
 import 'package:basu_118/widgets/app_snackbar.dart';
@@ -146,7 +145,7 @@ class __FavoriteCategoryBottomSheetContentState
       Navigator.of(context).pop(_selectedIds);
       
       // Refresh home data
-      context.read<HomeBloc>().add(GetRelativeInfo(userId: AuthService().userInfo!.uid!));
+      context.read<HomeBloc>().add(GetRelativeInfo());
       
       // Show success message
       showAppSnackBar(context, message: 'با موفقیت اضافه شد!', type: AppSnackBarType.success);

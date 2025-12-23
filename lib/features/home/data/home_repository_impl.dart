@@ -7,8 +7,8 @@ class HomeRepositoryImpl implements HomeRepository {
 
   HomeRepositoryImpl({required this.api});
   @override
-  Future<HomeResponseDTO> getHome(int userId) async{
-    final response = await api.get('/related/$userId'); 
+  Future<HomeResponseDTO> getHome() async{
+    final response = await api.get('/related'); 
     return HomeResponseDTO.fromJson(response.data);
   }
 }

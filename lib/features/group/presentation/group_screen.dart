@@ -30,10 +30,7 @@ class _GroupScreenState extends State<GroupScreen> {
   }
 
   void _fetchGroups() {
-    final uid = AuthService().userInfo?.uid;
-    if (uid != null) {
-      context.read<GroupBloc>().add(GetGroupsStarted(userId: uid));
-    }
+      context.read<GroupBloc>().add(GetGroupsStarted());
   }
 
   void _showDeleteConfirmationDialog(GroupDTO group) {
@@ -557,7 +554,6 @@ class _GroupScreenState extends State<GroupScreen> {
 
   void _createManualGroup() {
     final groupName = _groupNameController.text.trim();
-    final userId = AuthService().userInfo?.uid;
 
     if (groupName.isEmpty) {
       showAppSnackBar(
@@ -568,27 +564,17 @@ class _GroupScreenState extends State<GroupScreen> {
       return;
     }
 
-    if (userId != null) {
-      // Create group with null template for manual creation
-      context.read<GroupBloc>().add(
-        CreateGroupEvent(userId: userId, groupName: groupName, template: null),
-      );
-    }
+    // Create group with null template for manual creation
+    context.read<GroupBloc>().add(
+      CreateGroupEvent(groupName: groupName, template: null),
+    );
   }
 
   void _createAutoGroup(String groupName, String template) {
-    final userId = AuthService().userInfo?.uid;
-
-    if (userId != null) {
-      // Create group with template for auto creation
-      context.read<GroupBloc>().add(
-        CreateGroupEvent(
-          userId: userId,
-          groupName: groupName,
-          template: template,
-        ),
-      );
-    }
+    // Create group with template for auto creation
+    context.read<GroupBloc>().add(
+      CreateGroupEvent(groupName: groupName, template: template),
+    );
   }
 
   String _getCurrentUserType() {
@@ -622,7 +608,7 @@ class _GroupScreenState extends State<GroupScreen> {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
-          
+
           showAppSnackBar(
             context,
             message: state.message,
@@ -632,10 +618,10 @@ class _GroupScreenState extends State<GroupScreen> {
           // Refresh groups list
           _fetchGroups();
         }
-        
+
         // Handle auto creation failure
         if (state is CreateGroupFailure) {
-          if(Navigator.canPop(context)) {
+          if (Navigator.canPop(context)) {
             Navigator.pop(context);
           }
           showAppSnackBar(
@@ -643,7 +629,9 @@ class _GroupScreenState extends State<GroupScreen> {
             message: state.message,
             type: AppSnackBarType.error,
           );
-          context.read<GroupBloc>().add(GetGroupsStarted(userId: AuthService().userInfo!.uid!));
+          context.read<GroupBloc>().add(
+            GetGroupsStarted(),
+          );
         }
 
         // Handle delete states

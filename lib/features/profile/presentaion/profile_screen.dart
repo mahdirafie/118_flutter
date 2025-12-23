@@ -1,4 +1,5 @@
 import 'package:animations/animations.dart';
+import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/personal_attribute/presentation/personal_attribute_screen.dart';
 import 'package:basu_118/features/profile/presentaion/bloc/profile_bloc.dart';
 import 'package:basu_118/theme/app_colors.dart';
@@ -7,8 +8,22 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Trigger GetFavoriteCategories on screen startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileBloc>().add(GetProfile());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,61 +90,109 @@ class ProfileScreen extends StatelessWidget {
                     SizedBox(height: 20),
 
                     // Profile Card
-                    OpenContainer(
-                      transitionType: ContainerTransitionType.fadeThrough,
-                      transitionDuration: Duration(milliseconds: 1500),
-                      closedBuilder: (context, action) {
-                        return Container(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: AppColors.neutral[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 1,
+                    if (AuthService().userInfo!.userType == "employee")
+                      OpenContainer(
+                        transitionType: ContainerTransitionType.fadeThrough,
+                        transitionDuration: Duration(milliseconds: 1500),
+                        closedBuilder: (context, action) {
+                          return Container(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: AppColors.neutral[200],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(32),
+                                    child: Image.asset(
+                                      'assets/images/profile_placeholder.png',
+                                      width: 64,
+                                      height: 64,
+                                    ),
                                   ),
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(32),
-                                  child: Image.asset(
-                                    'assets/images/profile_placeholder.png',
-                                    width: 64,
-                                    height: 64,
+                                SizedBox(height: 8),
+                                Text(
+                                  state.response.user.fullName.isNotEmpty
+                                      ? state.response.user.fullName
+                                      : 'نام تعیین نشده',
+                                  style: TextStyle(
+                                    color: AppColors.neutral[900],
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                state.response.user.fullName.isNotEmpty
-                                    ? state.response.user.fullName
-                                    : 'نام تعیین نشده',
-                                style: TextStyle(
-                                  color: AppColors.neutral[900],
-                                  fontWeight: FontWeight.bold,
+                                SizedBox(height: 4),
+                                Text(
+                                  employee != null ? 'کارمند' : 'کاربر عادی',
+                                  style: TextStyle(
+                                    color: AppColors.neutral[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        openBuilder: (context, action) {
+                          return PersonalAttributeScreen();
+                        },
+                      )
+                    else
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppColors.neutral[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 1,
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                employee != null ? 'کارمند' : 'کاربر عادی',
-                                style: TextStyle(color: AppColors.neutral[600]),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(32),
+                                child: Image.asset(
+                                  'assets/images/profile_placeholder.png',
+                                  width: 64,
+                                  height: 64,
+                                ),
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                      openBuilder: (context, action) {
-                        return PersonalAttributeScreen();
-                      },
-                    ),
-
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              state.response.user.fullName.isNotEmpty
+                                  ? state.response.user.fullName
+                                  : 'نام تعیین نشده',
+                              style: TextStyle(
+                                color: AppColors.neutral[900],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              employee != null ? 'کارمند' : 'کاربر عادی',
+                              style: TextStyle(color: AppColors.neutral[600]),
+                            ),
+                          ],
+                        ),
+                      ),
                     SizedBox(height: 20),
 
                     // Profile Fields
@@ -202,8 +265,8 @@ class ProfileScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          
-                          SizedBox(height: 10,),
+
+                          SizedBox(height: 10),
                           // button that takes user to personal attribute screen
                           Container(
                             margin: EdgeInsets.symmetric(vertical: 10),
@@ -214,8 +277,11 @@ class ProfileScreen extends StatelessWidget {
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text('تنظیم اطلاعات بیشتر', style: TextStyle(color: Colors.white),),
-                          )
+                            child: Text(
+                              'تنظیم اطلاعات بیشتر',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
                         ],
                       ),
                   ],

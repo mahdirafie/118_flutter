@@ -115,7 +115,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     on<DeleteFromFavorites>((event, emit) async{
       try {
         emit(DeleteFromFavoritesLoading());
-        await repo.deleteFromFavorites(event.cid, event.uid);
+        await repo.deleteFromFavorites(event.cid);
         emit(DeleteFromFavoritesSuccess());
       } on DioException catch(e) {
         String userMessage = 'خطایی رخ داد';
@@ -133,7 +133,7 @@ class FavoriteBloc extends Bloc<FavoriteEvent, FavoriteState> {
     on<GetFavoriteCategoryFavorites>((event, emit)async {
       try {
         emit(GetFavoriteCategoryFavoritesLoading());
-        final response = await repo.getFavCatFavorites(event.favcatId, event.userId);
+        final response = await repo.getFavCatFavorites(event.favcatId);
         emit(GetFavoriteCategoryFavoritesSuccess(response: response));
       }on DioException catch(e) {
         String userMessage = 'خطایی رخ داد';

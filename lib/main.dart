@@ -56,14 +56,12 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create:
               (_) =>
-                  FavoriteBloc(FavoriteRepositoryImpl(api: apiService))
-                    ..add(GetFavoriteCategories()),
+                  FavoriteBloc(FavoriteRepositoryImpl(api: apiService)),
         ),
         BlocProvider(
           create:
               (_) =>
-                  ProfileBloc(ProfileRepositoryImpl(api: apiService))
-                    ..add(GetProfile()),
+                  ProfileBloc(ProfileRepositoryImpl(api: apiService)),
         ),
         BlocProvider(create: (_) => FilterBloc()..add(FilterLoadEvent())),
         BlocProvider(

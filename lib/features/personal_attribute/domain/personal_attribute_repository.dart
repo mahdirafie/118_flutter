@@ -2,4 +2,5 @@ import 'package:basu_118/features/personal_attribute/dto/personal_attribute_dto.
 
 abstract class PersonalAttributeRepository {
   Future<PersonalAttributeResponseDTO> getAllAttribute();
+  Future<void> setAttributeValues(List<Map<String, dynamic>> attVals);
 }

@@ -36,8 +36,8 @@ class SearchRepositoryImpl implements SearchRepository {
   }
 
   @override
-  Future<SearchHistoriesDTO> searchHistories(int userId) async {
-    final response = await api.get('/search/user-histories/$userId');
+  Future<SearchHistoriesDTO> searchHistories() async {
+    final response = await api.get('/search/user-histories');
     return SearchHistoriesDTO.fromJson(response.data);
   }
 
@@ -47,7 +47,7 @@ class SearchRepositoryImpl implements SearchRepository {
   }
 
   @override
-  Future<void> createSearchHistory(String query, int uid) async {
-    await api.post('/search/history/create', {'uid': uid, 'query': query});
+  Future<void> createSearchHistory(String query) async {
+    await api.post('/search/history/create', {'query': query});
   }
 }

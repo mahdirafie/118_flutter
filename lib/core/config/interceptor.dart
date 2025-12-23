@@ -14,6 +14,8 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     final accessToken = await LocalStorage.getAccessToken();
+    print("ACCESS TOKEN:");
+    print(accessToken);
 
     if (accessToken != null) {
       options.headers['Authorization'] = 'Bearer $accessToken';
@@ -50,9 +52,12 @@ class AuthInterceptor extends Interceptor {
     _isRefreshing = true;
 
     try {
-      // Call refresh API
+      final refreshUri = Uri.parse(
+        err.requestOptions.baseUrl,
+      ).resolve('auth/refresh');
+
       final response = await dio.post(
-        "${err.requestOptions.baseUrl}/auth/refresh",
+        refreshUri.toString(),
         data: {"refresh_token": refreshToken},
       );
 
@@ -77,6 +82,8 @@ class AuthInterceptor extends Interceptor {
 
       handler.resolve(retryResponse);
     } catch (refreshError) {
+      print("REFRESH FAILED!");
+      print(refreshError.toString());
       // Refresh failed → logout
       await LocalStorage.clear();
 

@@ -7,8 +7,20 @@ class PersonalAttributeRepositoryImpl implements PersonalAttributeRepository {
 
   PersonalAttributeRepositoryImpl({required this.api});
   @override
-  Future<PersonalAttributeResponseDTO> getAllAttribute() async{
-   final response = await api.get('/attribute/get-all');
-   return PersonalAttributeResponseDTO.fromJson(response.data);
+  Future<PersonalAttributeResponseDTO> getAllAttribute() async {
+    final response = await api.get('/attribute/get-all');
+    return PersonalAttributeResponseDTO.fromJson(response.data);
+  }
+
+  @override
+  Future<void> setAttributeValues(List<Map<String, dynamic>> attVals) async {
+    final response = await api.post(
+      '/attribute/set-atts-values', {
+        'attributes': attVals
+      }
+    );
+    print(response.data);
+    print("----------------------------");
+    print(attVals);
   }
 }

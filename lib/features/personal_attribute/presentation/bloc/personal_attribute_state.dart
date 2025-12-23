@@ -19,3 +19,15 @@ final class PersonalAttributeSuccess extends PersonalAttributeState {
 
   const PersonalAttributeSuccess({required this.response});
 }
+
+final class SetPersonalAttributeValuesLoading extends PersonalAttributeState {}
+final class SetPersonalAttributeValuesFailure extends PersonalAttributeState {
+  final String message;
+
+  const SetPersonalAttributeValuesFailure({required this.message});
+}
+final class SetPersonalAttributeValuesSuccess extends PersonalAttributeState {
+  final String message;
+
+  const SetPersonalAttributeValuesSuccess({required this.message});
+}

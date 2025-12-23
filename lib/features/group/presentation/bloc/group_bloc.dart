@@ -13,7 +13,7 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     on<GetGroupsStarted>((event, emit) async{
       try {
         emit(GetGroupLoading());
-        final response = await repo.getGroups(event.userId);
+        final response = await repo.getGroups();
         emit(GetGroupSuccess(response: response));
       }on DioException catch(e) {
          String userMessage = 'خطایی رخ داد';
@@ -31,7 +31,7 @@ class GroupBloc extends Bloc<GroupEvent, GroupState> {
     on<CreateGroupEvent>((event, emit) async{
       try {
         emit(CreateGroupLoading());
-        await repo.createGroup(event.userId, event.groupName, event.template);
+        await repo.createGroup(event.groupName, event.template);
         emit(CreateGroupSuccess(message: "گروه با موفقیت ساخته شد!"));
       } on DioException catch(e) {
          String userMessage = 'خطایی رخ داد';

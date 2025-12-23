@@ -7,8 +7,4 @@ sealed class HomeEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class GetRelativeInfo extends HomeEvent {
-  final int userId;
-
-  const GetRelativeInfo({required this.userId});
-}
+final class GetRelativeInfo extends HomeEvent {}

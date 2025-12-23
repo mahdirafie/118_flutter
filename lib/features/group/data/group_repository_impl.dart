@@ -8,15 +8,14 @@ class GroupRepositoryImpl implements GroupRepository {
 
   GroupRepositoryImpl({required this.api});
   @override
-  Future<GroupResponseDTO> getGroups(int userId) async{
-    final response = await api.get('/group/get-emp-groups/$userId');
+  Future<GroupResponseDTO> getGroups() async{
+    final response = await api.get('/group/get-emp-groups');
     return GroupResponseDTO.fromJson(response.data);
   }
   
   @override
-  Future<void> createGroup(int userId, String groupName, String? template) async {
+  Future<void> createGroup(String groupName, String? template) async {
     await api.post('/group/create', {
-      'uid': userId,
       'gname': groupName,
       'template': template
     });

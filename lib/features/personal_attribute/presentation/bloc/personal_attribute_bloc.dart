@@ -28,5 +28,23 @@ class PersonalAttributeBloc
         emit(PersonalAttributeFailure(message: e.toString()));
       }
     });
+
+    on<SetPersonalAttributeValuesEvent>((event, emit) async{
+      try {
+        emit(SetPersonalAttributeValuesLoading());
+        await repo.setAttributeValues(event.attributes);
+        emit(SetPersonalAttributeValuesSuccess(message: "مقادیر با موفقیت به روز رسانی شدند!"));
+      } on DioException catch(e) {
+        String userMessage = 'خطایی رخ داد';
+
+        if (e.response?.data is Map &&
+            (e.response!.data as Map).containsKey('message')) {
+          userMessage = e.response!.data['message'];
+        }
+        emit(PersonalAttributeFailure(message: userMessage));
+      } catch(e) {
+        emit(SetPersonalAttributeValuesFailure(message: e.toString()));
+      }
+    });
   }
 }

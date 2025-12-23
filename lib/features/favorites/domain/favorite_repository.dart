@@ -7,6 +7,6 @@ abstract class FavoriteRepository {
   Future<void> deleteFavoriteCategory(int categoryId);
   Future<void> updateFavoriteCategory(int categoryId, String newCategoryTitle);
   Future<void> addToFavoritesToCats(int cid, List<int> favcatIds);
-  Future<void> deleteFromFavorites(int cid, int uid);
-  Future<FavoriteCategoryFavoritesDTO> getFavCatFavorites(int favCatId, int userId);
+  Future<void> deleteFromFavorites(int cid);
+  Future<FavoriteCategoryFavoritesDTO> getFavCatFavorites(int favCatId);
 }

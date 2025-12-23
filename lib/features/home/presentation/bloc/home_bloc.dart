@@ -13,7 +13,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<GetRelativeInfo>((event, emit) async {
       try {
         emit(RelativeInfoLoading());
-        final response = await repo.getHome(event.userId);
+        final response = await repo.getHome();
         emit(RelativeInfoSuccess(response: response));
       } on DioException catch (e) {
         String userMessage = 'خطایی رخ داد';

@@ -1,4 +1,6 @@
 // contact_detail_screen.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/favorites/presentation/favorite_category_bottom_sheet.dart';
 import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart';
@@ -35,15 +37,11 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
     // Trigger the event when screen starts
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ContactDetailBloc>().add(
-        GetContactDetailStarted(
-          cid: widget.cid,
-          uid: AuthService().userInfo!.uid!,
-        ),
+        GetContactDetailStarted(cid: widget.cid),
       );
     });
   }
 
-  
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
@@ -57,12 +55,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
               });
 
               // Refresh contact detail data
-              final userId = AuthService().userInfo?.uid;
-              if (userId != null) {
-                context.read<ContactDetailBloc>().add(
-                  GetContactDetailStarted(cid: widget.cid, uid: userId),
-                );
-              }
+              context.read<ContactDetailBloc>().add(
+                GetContactDetailStarted(cid: widget.cid),
+              );
             }
 
             if (state is DeleteFromFavoritesFailure) {
@@ -99,66 +94,71 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                 if (state is GetContactDetailSuccess) {
                   final contact = state.response.contact;
 
-                  // Check if contact is employee and show menu
-                  if (contact.contactType == 'employee') {
-                    return PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: Colors.grey.shade700),
-                      onSelected: (value) {
-                        _handleMenuSelection(value, contact);
-                      },
-                      itemBuilder: (BuildContext context) {
-                        return [
-                          PopupMenuItem<String>(
-                            value: 'add_to_group',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.group_add,
-                                  color: Colors.grey.shade700,
-                                ),
-                                SizedBox(width: 8),
-                                Text('افزودن به گروه'),
-                              ],
+                  if (AuthService().userInfo!.userType == "employee") {
+                    // Check if contact is employee and show menu
+                    if (contact.contactType == 'employee') {
+                      return PopupMenuButton<String>(
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: Colors.grey.shade700,
+                        ),
+                        onSelected: (value) {
+                          _handleMenuSelection(value, contact);
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return [
+                            PopupMenuItem<String>(
+                              value: 'add_to_group',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.group_add,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('افزودن به گروه'),
+                                ],
+                              ),
                             ),
-                          ),
-                          PopupMenuItem<String>(
-                            value: 'add_reminder',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.notifications,
-                                  color: Colors.grey.shade700,
-                                ),
-                                SizedBox(width: 8),
-                                Text('افزودن یادآور'),
-                              ],
+                            PopupMenuItem<String>(
+                              value: 'add_reminder',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.notifications,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('افزودن یادآور'),
+                                ],
+                              ),
                             ),
-                          ),
-                          PopupMenuItem<String>(
-                            value: 'additional_info',
-                            child: Row(
-                              children: [
-                                Icon(Icons.info, color: Colors.grey.shade700),
-                                SizedBox(width: 8),
-                                Text('اطلاعات تکمیلی'),
-                              ],
+                            PopupMenuItem<String>(
+                              value: 'additional_info',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info, color: Colors.grey.shade700),
+                                  SizedBox(width: 8),
+                                  Text('اطلاعات تکمیلی'),
+                                ],
+                              ),
                             ),
-                          ),
-                        ];
+                          ];
+                        },
+                      );
+                    }
+
+                    // For non-employee contacts, show only add reminder button
+                    return IconButton(
+                      icon: Icon(
+                        Icons.notifications,
+                        color: Colors.grey.shade700,
+                      ),
+                      onPressed: () {
+                        _handleAddReminder(contact);
                       },
                     );
                   }
-
-                  // For non-employee contacts, show only add reminder button
-                  return IconButton(
-                    icon: Icon(
-                      Icons.notifications,
-                      color: Colors.grey.shade700,
-                    ),
-                    onPressed: () {
-                      _handleAddReminder(contact);
-                    },
-                  );
                 }
 
                 // Return empty container while loading or on error
@@ -259,10 +259,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
             ElevatedButton(
               onPressed: () {
                 context.read<ContactDetailBloc>().add(
-                  GetContactDetailStarted(
-                    cid: widget.cid,
-                    uid: AuthService().userInfo!.uid!,
-                  ),
+                  GetContactDetailStarted(cid: widget.cid),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -477,23 +474,17 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       // Wait a bit to allow bottom sheet to close completely
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final userId = AuthService().userInfo?.uid;
-      if (userId != null) {
-        context.read<ContactDetailBloc>().add(
-          GetContactDetailStarted(cid: widget.cid, uid: userId),
-        );
-      }
+      context.read<ContactDetailBloc>().add(
+        GetContactDetailStarted(cid: widget.cid),
+      );
     }
     // If selectedIds is empty array, user selected "none" - still need to refresh
     else if (selectedIds != null && selectedIds.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final userId = AuthService().userInfo?.uid;
-      if (userId != null) {
-        context.read<ContactDetailBloc>().add(
-          GetContactDetailStarted(cid: widget.cid, uid: userId),
-        );
-      }
+      context.read<ContactDetailBloc>().add(
+        GetContactDetailStarted(cid: widget.cid),
+      );
     }
   }
 
@@ -506,9 +497,7 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
     final userId = AuthService().userInfo?.uid;
     if (userId != null) {
-      context.read<FavoriteBloc>().add(
-        DeleteFromFavorites(cid: widget.cid, uid: userId),
-      );
+      context.read<FavoriteBloc>().add(DeleteFromFavorites(cid: widget.cid));
     } else {
       setState(() {
         _isDeleteLoading = false;

@@ -8,3 +8,8 @@ sealed class PersonalAttributeEvent extends Equatable {
 }
 
 final class GetPersonalAttributesEvent extends PersonalAttributeEvent {}
+final class SetPersonalAttributeValuesEvent extends PersonalAttributeEvent {
+  final List<Map<String, dynamic>> attributes;
+
+  const SetPersonalAttributeValuesEvent({required this.attributes});
+}

@@ -7,9 +7,8 @@ class ContactRepositoryImpl implements ContactRepository {
 
   ContactRepositoryImpl({required this.api});
   @override
-  Future<ContactDetailDTO> getContactDetail(int cid, int uid) async{
-    final response = await api.get('/contactable/info/$cid/$uid');
+  Future<ContactDetailDTO> getContactDetail(int cid) async{
+    final response = await api.get('/contactable/info/$cid');
     return ContactDetailDTO.fromJson(response.data);
   }
-
 }

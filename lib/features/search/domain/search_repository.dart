@@ -8,7 +8,7 @@ abstract class SearchRepository {
     int? departmentId,
     String? workArea,
   });
-  Future<SearchHistoriesDTO> searchHistories(int userId);
+  Future<SearchHistoriesDTO> searchHistories();
   Future<void> deleteSearchHistory(int shId);
-  Future<void> createSearchHistory(String query, int uid);
+  Future<void> createSearchHistory(String query);
 }

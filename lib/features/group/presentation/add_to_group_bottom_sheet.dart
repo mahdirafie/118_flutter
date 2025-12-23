@@ -1,5 +1,4 @@
 // add_to_group_bottom_sheet.dart
-import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/group/dto/group_response_dto.dart';
 import 'package:basu_118/features/group/presentation/bloc/group_bloc.dart';
 import 'package:basu_118/features/group/presentation/bloc/group_member_bloc.dart';
@@ -56,10 +55,7 @@ class __AddToGroupBottomSheetContentState
   }
 
   void _fetchGroups() {
-    final userId = AuthService().userInfo?.uid;
-    if (userId != null) {
-      context.read<GroupBloc>().add(GetGroupsStarted(userId: userId));
-    }
+      context.read<GroupBloc>().add(GetGroupsStarted());
   }
 
   void _handleAddToGroup() {

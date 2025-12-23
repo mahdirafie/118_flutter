@@ -1,4 +1,6 @@
 // home_screen.dart
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/favorites/presentation/favorite_category_bottom_sheet.dart';
 import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart';
@@ -34,11 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Trigger the event when home screen starts up
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Get user ID from AuthService
-      final userId = AuthService().userInfo?.uid;
-      if (userId != null) {
-        context.read<HomeBloc>().add(GetRelativeInfo(userId: userId));
-      }
+
+      context.read<HomeBloc>().add(GetRelativeInfo());
     });
   }
 
@@ -88,10 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
               }
 
               // Refresh home data when favorite is deleted
-              final userId = AuthService().userInfo?.uid;
-              if (userId != null) {
-                context.read<HomeBloc>().add(GetRelativeInfo(userId: userId));
-              }
+                context.read<HomeBloc>().add(GetRelativeInfo());
             }
 
             if (state is DeleteFromFavoritesFailure) {
@@ -172,10 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                final userId = AuthService().userInfo?.uid;
-                if (userId != null) {
-                  context.read<HomeBloc>().add(GetRelativeInfo(userId: userId));
-                }
+                  context.read<HomeBloc>().add(GetRelativeInfo());
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black87,
@@ -219,10 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return RefreshIndicator(
         onRefresh: () async {
-          final userId = AuthService().userInfo?.uid;
-          if (userId != null) {
-            context.read<HomeBloc>().add(GetRelativeInfo(userId: userId));
-          }
+            context.read<HomeBloc>().add(GetRelativeInfo());
         },
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -301,7 +291,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? null
                   : () {
                     // Navigate to employee details
-                    context.push('/contact-detail/${employee.cid}/${employee.fullName}');
+                    context.push(
+                      '/contact-detail/${employee.cid}/${employee.fullName}',
+                    );
                   },
           borderRadius: BorderRadius.circular(12),
           child: Container(
@@ -606,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final userId = AuthService().userInfo?.uid;
           if (userId != null) {
             context.read<FavoriteBloc>().add(
-              DeleteFromFavorites(cid: cid, uid: userId),
+              DeleteFromFavorites(cid: cid),
             );
           } else {
             _stopDeleteLoading(itemKey);
@@ -629,21 +621,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // If user selected categories, refresh home data
           if (selectedIds != null && selectedIds.isNotEmpty) {
-            final userId = AuthService().userInfo?.uid;
-            if (userId != null) {
               // Wait a bit to allow bottom sheet to close completely
               await Future.delayed(const Duration(milliseconds: 300));
-              context.read<HomeBloc>().add(GetRelativeInfo(userId: userId));
-            }
+              context.read<HomeBloc>().add(GetRelativeInfo());
           }
           // If selectedIds is null, user cancelled - no action needed
           // If selectedIds is empty array, user selected "none" - still need to refresh
           else if (selectedIds != null && selectedIds.isEmpty) {
-            final userId = AuthService().userInfo?.uid;
-            if (userId != null) {
               await Future.delayed(const Duration(milliseconds: 300));
-              context.read<HomeBloc>().add(GetRelativeInfo(userId: userId));
-            }
+              context.read<HomeBloc>().add(GetRelativeInfo());
           }
         }
       },
