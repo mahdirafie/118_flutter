@@ -1,5 +1,6 @@
 import 'package:basu_118/features/group/dto/group_members_response_dto.dart';
 import 'package:basu_118/features/group/presentation/bloc/group_member_bloc.dart';
+import 'package:basu_118/features/personal_attribute/presentation/personal_attribute_visibility_bottom_sheet.dart';
 import 'package:basu_118/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -107,6 +108,41 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
               );
             },
           ),
+          actions: [
+            // Visibility Settings Button
+            Builder(
+              builder: (context) {
+                return BlocBuilder<GroupMemberBloc, GroupMemberState>(
+                  builder: (context, state) {
+                    // Only show the button when we have group data
+                    if (state is GetGroupMembersSuccess) {
+                      final groupId = widget.gid;
+
+                      return IconButton(
+                        icon: Icon(
+                          Icons.visibility,
+                          color: Colors.grey.shade700,
+                        ),
+                        onPressed: () {
+                          // Show the bottom sheet for group visibility settings
+                          VisibleAttributesBottomSheet.show(
+                            context: context,
+                            receiverId: groupId,
+                            type: 'group',
+                            title:
+                                'تنظیم دسترسی گروه "${state.response.group.groupName}"',
+                          );
+                        },
+                      );
+                    }
+
+                    // Return empty container while loading or on error
+                    return Container();
+                  },
+                );
+              },
+            ),
+          ],
         ),
         body: BlocBuilder<GroupMemberBloc, GroupMemberState>(
           builder: (context, state) {
@@ -451,7 +487,9 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
                     ),
                     onTap: () {
                       Navigator.of(context).pop();
-                      context.push('/contact-detail/${member.cId}/${member.user.fullName}');
+                      context.push(
+                        '/contact-detail/${member.cId}/${member.user.fullName}',
+                      );
                     },
                   ),
 

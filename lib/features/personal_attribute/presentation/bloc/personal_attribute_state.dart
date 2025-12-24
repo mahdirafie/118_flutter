@@ -31,3 +31,27 @@ final class SetPersonalAttributeValuesSuccess extends PersonalAttributeState {
 
   const SetPersonalAttributeValuesSuccess({required this.message});
 }
+
+final class SetVisibleAttributesLoading extends PersonalAttributeState {}
+final class SetVisibleAttributesFailure extends PersonalAttributeState {
+  final String message;
+
+  const SetVisibleAttributesFailure({required this.message});
+}
+final class SetVisibleAttributesSuccess extends PersonalAttributeState {
+  final String message;
+
+  const SetVisibleAttributesSuccess({required this.message});
+}
+
+final class GetPersonalAttributeValuesWithVisibilityLoading extends PersonalAttributeState {}
+final class GetPersonalAttributeValuesWithVisibilityFailure extends PersonalAttributeState {
+  final String message;
+
+  const GetPersonalAttributeValuesWithVisibilityFailure({required this.message});
+}
+final class GetPersonalAttributeValuesWithVisibilitySuccess extends PersonalAttributeState {
+  final AttributeValueVisibleDTO response;
+
+  const GetPersonalAttributeValuesWithVisibilitySuccess({required this.response});
+}

@@ -19,6 +19,8 @@ import 'package:basu_118/features/profile/presentaion/bloc/profile_bloc.dart';
 import 'package:basu_118/features/search/data/search_repository_impl.dart';
 import 'package:basu_118/features/search/presentation/bloc/search_bloc.dart';
 import 'package:basu_118/features/search/presentation/bloc/search_history_bloc.dart';
+import 'package:basu_118/features/visible-info/data/visible_info_repository_impl.dart';
+import 'package:basu_118/features/visible-info/presentation/bloc/visible_info_bloc.dart';
 import 'package:basu_118/models/signup_data.dart';
 import 'package:basu_118/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -77,7 +79,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => ContactDetailBloc(ContactRepositoryImpl(api: apiService))),
         BlocProvider(create: (_) => GroupBloc(GroupRepositoryImpl(api: ApiService()))),
         BlocProvider(create: (_) => GroupMemberBloc(GroupRepositoryImpl(api: apiService))),
-        BlocProvider(create: (_) => PersonalAttributeBloc(PersonalAttributeRepositoryImpl(api: apiService)))
+        BlocProvider(create: (_) => PersonalAttributeBloc(PersonalAttributeRepositoryImpl(api: apiService))),
+        BlocProvider(create: (_) => VisibleInfoBloc(VisibleInfoRepositoryImpl(api: apiService)))
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router,

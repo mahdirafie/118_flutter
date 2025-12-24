@@ -5,6 +5,7 @@ import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/favorites/presentation/favorite_category_bottom_sheet.dart';
 import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart';
 import 'package:basu_118/features/group/presentation/add_to_group_bottom_sheet.dart';
+import 'package:basu_118/features/personal_attribute/presentation/personal_attribute_visibility_bottom_sheet.dart';
 import 'package:basu_118/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -139,7 +140,17 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                                 children: [
                                   Icon(Icons.info, color: Colors.grey.shade700),
                                   SizedBox(width: 8),
-                                  Text('اطلاعات تکمیلی'),
+                                  Text('اطلاعات شخصی'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem<String>(
+                              value: 'visible_personal_attributes',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.visibility, color: Colors.grey.shade700),
+                                  SizedBox(width: 8),
+                                  Text('اطلاعات قابل نمایش'),
                                 ],
                               ),
                             ),
@@ -187,6 +198,9 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
       case 'additional_info':
         _handleAdditionalInfo(contact);
         break;
+      case 'visible_personal_attributes':
+        _handleVisibleAttributes(contact);
+        break;
     }
   }
 
@@ -211,15 +225,18 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   void _handleAdditionalInfo(ContactContact contact) {
-    // TODO: Navigate to additional info screen
-    // You'll implement this later
+    final empId = contact.id;
 
-    // For now, show a message
-    showAppSnackBar(
-      context,
-      message: 'مشاهده اطلاعات تکمیلی در حال توسعه است',
-      type: AppSnackBarType.info,
-    );
+    context.push('/visible-info/$empId');
+  }
+
+  void _handleVisibleAttributes(ContactContact contact) {
+    VisibleAttributesBottomSheet.show(
+    context: context,
+    receiverId: contact.id, // The employee ID who will see the attributes
+    type: 'employee',
+    title: 'تنظیم دسترسی برای ${widget.cname}',
+  );
   }
 
   Widget _buildBody(ContactDetailState state) {

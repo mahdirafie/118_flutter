@@ -9,6 +9,7 @@ import 'package:basu_118/features/group/presentation/group_screen.dart';
 import 'package:basu_118/features/home/presentation/home_screen.dart';
 import 'package:basu_118/features/profile/presentaion/profile_screen.dart';
 import 'package:basu_118/features/splash_screen.dart';
+import 'package:basu_118/features/visible-info/presentation/employee_visible_info_screen.dart';
 import 'package:basu_118/widgets/scaffold_with_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +30,7 @@ class AppRoutes {
   static const String favCategoryDetail = '/favorite-category/:favcatId/:title';
   static const String group = '/group';
   static const String groupMembers = '/group-members/:gid';
+  static const String visibleInfo = '/visible-info/:emp_id';
 }
 
 class AppRouter {
@@ -135,6 +137,15 @@ class AppRouter {
         builder: (context, state) {
           final gid = int.tryParse(state.pathParameters['gid'] ?? '0') ?? 0;
           return GroupMembersScreen(gid: gid);
+        },
+      ),
+
+      GoRoute(
+        path: AppRoutes.visibleInfo,
+        name: 'visibleInfo',
+        builder: (context, state) {
+          final empId = int.tryParse(state.pathParameters['emp_id'] ?? '0') ?? 0;
+          return VisibleInfoScreen(empId: empId);
         },
       ),
 
