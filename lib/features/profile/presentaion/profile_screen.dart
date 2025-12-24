@@ -7,6 +7,7 @@ import 'package:basu_118/widgets/readonly_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -268,18 +269,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           SizedBox(height: 10),
                           // button that takes user to personal attribute screen
-                          Container(
-                            margin: EdgeInsets.symmetric(vertical: 10),
-                            width: double.infinity,
-                            alignment: Alignment.center,
-                            padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'تنظیم اطلاعات بیشتر',
-                              style: TextStyle(color: Colors.white),
+                          GestureDetector(
+                            onTap: () {
+                              context.push('/personal-att');
+                            },
+                            child: Container(
+                              margin: EdgeInsets.symmetric(vertical: 10),
+                              width: double.infinity,
+                              alignment: Alignment.center,
+                              padding: EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'تنظیم اطلاعات بیشتر',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ),
                         ],

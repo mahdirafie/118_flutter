@@ -128,10 +128,13 @@ class _FullWidthDrawerState extends State<FullWidthDrawer> {
               color: AppColors.neutral[0],
               child: Column(
                 children: [
+                  if (userInfo?.userType == "employee")
                   MenuItem(
                     title: 'یادآور تماس',
                     iconPath: 'assets/images/remind.svg',
-                    onTap: () {},
+                    onTap: () {
+                      context.push('/reminder-screen');
+                    },
                   ),
                   if (userInfo?.userType == "employee")
                     MenuItem(

@@ -31,6 +31,16 @@
 
   <title>basu_118</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(function(permission) {
+        console.log('Notification permission:', permission);
+      });
+    }
+  </script>
+  
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

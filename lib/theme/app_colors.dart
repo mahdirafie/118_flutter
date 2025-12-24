@@ -1,25 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-
   static const int _primaryMain = 0xFF2563EB;
-  static const MaterialColor primary = MaterialColor(
-    _primaryMain,
-    <int, Color>{
-      50: Color(0xFFEFF6FF),
-      100: Color(0xFFDBEAFE),
-      200: Color(0xFFBFDBFE),
-      300: Color(0xFF93C5FD),
-      400: Color(0xFF60A5FA),
-      500: Color(0xFF3B82F6),
-      600: Color(_primaryMain),
-      700: Color(0xFF1D4ED8),
-      800: Color(0xFF1E40AF),
-      900: Color(0xFF1E3A8A),
-      950: Color(0xFF172554),
-    },
-  );
-
+  static const MaterialColor primary = MaterialColor(_primaryMain, <int, Color>{
+    50: Color(0xFFEFF6FF),
+    100: Color(0xFFDBEAFE),
+    200: Color(0xFFBFDBFE),
+    300: Color(0xFF93C5FD),
+    400: Color(0xFF60A5FA),
+    500: Color(0xFF3B82F6),
+    600: Color(_primaryMain),
+    700: Color(0xFF1D4ED8),
+    800: Color(0xFF1E40AF),
+    900: Color(0xFF1E3A8A),
+    950: Color(0xFF172554),
+  });
 
   static const Map<int, Color> neutral = {
     0: Color(0xFFFFFFFF),
@@ -54,4 +49,11 @@ class AppColors {
   static const Color info50 = Color(0xFFE0F7FA);
   static const Color info500 = Color(0xFF17A2B8);
   static const Color info800 = Color(0xFF006064);
+
+  static const Color background = Color(0xFFF8F9FA);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color onBackground = Color(0xFF1C1C1E);
+  static const Color onSurface = Color(0xFF8E8E93);
+  static const Color outline = Color(0xFFC7C7CC);
+  static const Color shadow = Color(0xFF000000);
 }

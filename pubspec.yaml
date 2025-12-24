@@ -46,6 +46,15 @@ dependencies:
   animations: ^2.1.0
   flutter_secure_storage: ^9.2.4
   intl: ^0.20.2
+  persian_datetime_picker: ^3.1.0
+  flutter_local_notifications: ^19.5.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  timezone: ^0.10.1
+  jiffy: ^6.4.4
+  url_launcher: ^6.3.2
+  rflutter_alert: ^2.0.7
+  flutter_timezone: ^5.0.1
 
 dev_dependencies:
   flutter_test:

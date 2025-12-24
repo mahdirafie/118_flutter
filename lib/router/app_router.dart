@@ -7,7 +7,9 @@ import 'package:basu_118/features/favorites/presentation/favorites_screen.dart';
 import 'package:basu_118/features/group/presentation/group_members_screen.dart';
 import 'package:basu_118/features/group/presentation/group_screen.dart';
 import 'package:basu_118/features/home/presentation/home_screen.dart';
+import 'package:basu_118/features/personal_attribute/presentation/personal_attribute_screen.dart';
 import 'package:basu_118/features/profile/presentaion/profile_screen.dart';
+import 'package:basu_118/features/reminder/presentation/reminder_screen.dart';
 import 'package:basu_118/features/splash_screen.dart';
 import 'package:basu_118/features/visible-info/presentation/employee_visible_info_screen.dart';
 import 'package:basu_118/widgets/scaffold_with_nav_bar.dart';
@@ -31,6 +33,8 @@ class AppRoutes {
   static const String group = '/group';
   static const String groupMembers = '/group-members/:gid';
   static const String visibleInfo = '/visible-info/:emp_id';
+  static const String reminderScreen = '/reminder-screen';
+  static const String personalAttributeScreen = '/personal-att';
 }
 
 class AppRouter {
@@ -106,6 +110,18 @@ class AppRouter {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.reminderScreen,
+        name: 'reminderScreen',
+        builder: (context, state) => const ReminderListScreen(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.personalAttributeScreen,
+        name: 'personalAttributeScreen',
+        builder: (context, state) => const PersonalAttributeScreen(),
       ),
 
       // Contact Detail Route (outside ShellRoute for full screen)

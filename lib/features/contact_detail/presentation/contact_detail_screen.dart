@@ -1,12 +1,9 @@
-// contact_detail_screen.dart
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:basu_118/core/auth_service/auth_service.dart';
 import 'package:basu_118/features/favorites/presentation/favorite_category_bottom_sheet.dart';
 import 'package:basu_118/features/favorites/presentation/bloc/favorite_bloc.dart';
 import 'package:basu_118/features/group/presentation/add_to_group_bottom_sheet.dart';
 import 'package:basu_118/features/personal_attribute/presentation/personal_attribute_visibility_bottom_sheet.dart';
-import 'package:basu_118/widgets/app_snackbar.dart';
+import 'package:basu_118/features/reminder/presentation/reminder_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/cupertino.dart';
@@ -148,7 +145,10 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
                               value: 'visible_personal_attributes',
                               child: Row(
                                 children: [
-                                  Icon(Icons.visibility, color: Colors.grey.shade700),
+                                  Icon(
+                                    Icons.visibility,
+                                    color: Colors.grey.shade700,
+                                  ),
                                   SizedBox(width: 8),
                                   Text('اطلاعات قابل نمایش'),
                                 ],
@@ -213,14 +213,10 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
   }
 
   void _handleAddReminder(ContactContact contact) {
-    // TODO: Navigate to add reminder screen
-    // You'll implement this later
-
-    // For now, show a message
-    showAppSnackBar(
-      context,
-      message: 'افزودن یادآور در حال توسعه است',
-      type: AppSnackBarType.info,
+    ReminderDialog.show(
+      context: context,
+      cid: widget.cid,
+      contactName: widget.cname,
     );
   }
 
@@ -232,11 +228,11 @@ class _ContactDetailScreenState extends State<ContactDetailScreen> {
 
   void _handleVisibleAttributes(ContactContact contact) {
     VisibleAttributesBottomSheet.show(
-    context: context,
-    receiverId: contact.id, // The employee ID who will see the attributes
-    type: 'employee',
-    title: 'تنظیم دسترسی برای ${widget.cname}',
-  );
+      context: context,
+      receiverId: contact.id, // The employee ID who will see the attributes
+      type: 'employee',
+      title: 'تنظیم دسترسی برای ${widget.cname}',
+    );
   }
 
   Widget _buildBody(ContactDetailState state) {
